@@ -8,6 +8,7 @@ const COIN_SETS = {
 
 const HISTORY_KEY = "ritual_prediction_history_v1";
 const DISCONNECT_KEY = "ritual_prediction_disconnected_v1";
+const THEME_KEY = "ritual_prediction_theme_v1";
 const $ = (id) => document.getElementById(id);
 
 let account = null;
@@ -33,6 +34,17 @@ function shortAddress(address) {
 function setStatus(message, isError = false) {
   $("statusText").textContent = message;
   $("statusText").classList.toggle("negative", isError);
+}
+
+function applyTheme(theme) {
+  const nextTheme = theme === "light" ? "light" : "dark";
+  document.body.classList.toggle("lightTheme", nextTheme === "light");
+  $("themeButtonText").textContent = nextTheme === "light" ? "Light" : "Dark";
+  localStorage.setItem(THEME_KEY, nextTheme);
+}
+
+function toggleTheme() {
+  applyTheme(document.body.classList.contains("lightTheme") ? "dark" : "light");
 }
 
 function formatUsd(value) {
@@ -292,6 +304,7 @@ $("connectButton").addEventListener("click", async () => {
   await connectWallet().catch((error) => setStatus(error.message, true));
 });
 $("disconnectButton").addEventListener("click", disconnectWallet);
+$("themeButton").addEventListener("click", toggleTheme);
 $("refreshButton").addEventListener("click", () => loadMarkets().catch((error) => {
   $("marketStatus").textContent = error.message;
   setStatus(error.message, true);
@@ -320,5 +333,6 @@ loadMarkets().catch((error) => {
   setStatus(error.message, true);
 });
 renderHistory();
+applyTheme(localStorage.getItem(THEME_KEY) || "dark");
 updateWalletStatus();
 setInterval(() => loadMarkets().catch((error) => setStatus(error.message, true)), 60000);

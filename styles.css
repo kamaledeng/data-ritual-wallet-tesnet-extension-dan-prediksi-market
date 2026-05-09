@@ -11,6 +11,9 @@
   --yellow: #ffd84d;
   --red: #ff6f7d;
   --shadow: 0 24px 90px rgba(0, 0, 0, 0.34);
+  --nav-bg: rgba(4, 10, 8, 0.74);
+  --hero-overlay: rgba(20, 37, 29, 0.95);
+  --hero-end: rgba(6, 26, 17, 0.82);
 }
 
 * {
@@ -26,6 +29,28 @@ body {
     linear-gradient(135deg, #05100c 0%, #0a1812 52%, #04100b 100%);
   color: var(--text);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body.lightTheme {
+  color-scheme: light;
+  --bg: #eff8f2;
+  --panel: #ffffff;
+  --panel-strong: #f1fbf5;
+  --line: #b6dcc8;
+  --text: #082117;
+  --muted: #4b6f5e;
+  --green: #0fb878;
+  --green-strong: #07885a;
+  --yellow: #8d6a00;
+  --red: #c0344b;
+  --shadow: 0 24px 80px rgba(13, 51, 34, 0.14);
+  --nav-bg: rgba(255, 255, 255, 0.78);
+  --hero-overlay: rgba(255, 255, 255, 0.86);
+  --hero-end: rgba(232, 250, 240, 0.9);
+  background:
+    radial-gradient(circle at 18% 10%, rgba(15, 184, 120, 0.22), transparent 32rem),
+    radial-gradient(circle at 84% 20%, rgba(255, 216, 77, 0.18), transparent 28rem),
+    linear-gradient(135deg, #f6fff9 0%, #e7f8ee 52%, #f8fffb 100%);
 }
 
 button,
@@ -71,7 +96,12 @@ a {
 .ritualNav {
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
+  padding: 14px 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--nav-bg);
+  backdrop-filter: blur(16px);
 }
 
 .ritualBrand,
@@ -88,6 +118,43 @@ a {
 .ritualLinks a {
   color: var(--muted);
   font-weight: 800;
+}
+
+.themeButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 13px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(6, 173, 114, 0.12);
+  color: var(--green);
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.themeIcon {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+}
+
+.themeIcon::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: inherit;
+  border: 1px dashed currentColor;
+  opacity: 0.65;
+}
+
+body.lightTheme .themeIcon {
+  background: currentColor;
+  box-shadow: inset -5px -3px 0 0 var(--panel);
 }
 
 .topbar {
@@ -226,7 +293,7 @@ h2 {
   border: 1px solid var(--line);
   border-radius: 8px;
   background:
-    linear-gradient(100deg, rgba(20, 37, 29, 0.95), rgba(6, 26, 17, 0.82)),
+    linear-gradient(100deg, var(--hero-overlay), var(--hero-end)),
     repeating-radial-gradient(circle at 16% 0%, rgba(140, 227, 123, 0.18) 0 1px, transparent 1px 13px);
   box-shadow: var(--shadow);
 }
@@ -261,6 +328,12 @@ h2 {
   background: rgba(5, 15, 11, 0.72);
 }
 
+body.lightTheme .marketTicker,
+body.lightTheme .selectedMarket,
+body.lightTheme .historyItem {
+  background: rgba(255, 255, 255, 0.72);
+}
+
 .marketTicker span {
   color: var(--yellow);
   font-weight: 900;
@@ -288,6 +361,11 @@ h2 {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: rgba(15, 27, 22, 0.92);
+}
+
+body.lightTheme .marketToolbar,
+body.lightTheme .panel {
+  background: rgba(255, 255, 255, 0.9);
 }
 
 .toolbarStatus {
@@ -462,6 +540,11 @@ h2 {
   color: var(--text);
 }
 
+body.lightTheme .field input,
+body.lightTheme .field select {
+  background: #fbfffd;
+}
+
 .statusText,
 .muted {
   color: var(--muted);
@@ -495,6 +578,42 @@ h2 {
   display: block;
 }
 
+.ritualFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 2px 4px;
+  color: var(--muted);
+  font-weight: 900;
+}
+
+.footerSocials {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.footerSocials a {
+  color: var(--muted);
+}
+
+.footerSocials a::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 8px;
+  border-radius: 2px;
+  background: currentColor;
+  transform: rotate(45deg);
+}
+
+.ritualFooter p {
+  margin: 0;
+  text-align: right;
+}
+
 .historyItem code {
   color: var(--muted);
   font-size: 0.78rem;
@@ -508,6 +627,7 @@ h2 {
 
   .ritualNav,
   .topbar,
+  .ritualLinks,
   .marketToolbar {
     align-items: flex-start;
     flex-direction: column;
@@ -544,5 +664,14 @@ h2 {
 
   .predictionPanel {
     position: static;
+  }
+
+  .ritualFooter {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .ritualFooter p {
+    text-align: left;
   }
 }
