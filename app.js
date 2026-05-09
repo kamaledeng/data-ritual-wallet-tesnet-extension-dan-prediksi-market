@@ -1,19 +1,34 @@
-const COINS = [
-  { id: "bitcoin", symbol: "BTC", name: "Bitcoin" },
-  { id: "ethereum", symbol: "ETH", name: "Ethereum" },
-  { id: "solana", symbol: "SOL", name: "Solana" },
-  { id: "binancecoin", symbol: "BNB", name: "BNB" },
-  { id: "ripple", symbol: "XRP", name: "XRP" },
-  { id: "dogecoin", symbol: "DOGE", name: "Dogecoin" },
-];
+const COIN_SETS = {
+  top: null,
+  defi: "decentralized-finance-defi",
+  ai: "artificial-intelligence",
+  meme: "meme-token",
+  layer1: "layer-1",
+};
 
 const HISTORY_KEY = "ritual_prediction_history_v1";
+const DISCONNECT_KEY = "ritual_prediction_disconnected_v1";
 const $ = (id) => document.getElementById(id);
 
 let account = null;
+let chainId = null;
 let markets = [];
 let selectedMarket = null;
 let selectedChoice = "YES";
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;",
+  }[char]));
+}
+
+function shortAddress(address) {
+  return `${address.slice(0, 6)}...${address.slice(-4)}`;
+}
 
 function setStatus(message, isError = false) {
   $("statusText").textContent = message;
@@ -21,12 +36,28 @@ function setStatus(message, isError = false) {
 }
 
 function formatUsd(value) {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: value > 10 ? 2 : 6 }).format(value);
+  if (value == null) return "-";
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: value > 10 ? 2 : 6,
+  }).format(value);
+}
+
+function formatCompact(value) {
+  if (value == null) return "-";
+  return new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 }).format(value);
 }
 
 function formatChange(value) {
-  const sign = value >= 0 ? "+" : "";
-  return `${sign}${value.toFixed(2)}%`;
+  const safeValue = Number(value || 0);
+  const sign = safeValue >= 0 ? "+" : "";
+  return `${sign}${safeValue.toFixed(2)}%`;
+}
+
+function syntheticYes(change) {
+  const value = Math.round(50 + Math.max(-25, Math.min(25, Number(change || 0))) * 1.4);
+  return Math.max(5, Math.min(95, value));
 }
 
 function getHistory() {
@@ -38,7 +69,7 @@ function getHistory() {
 }
 
 function saveHistory(item) {
-  const next = [item, ...getHistory()].slice(0, 20);
+  const next = [item, ...getHistory()].slice(0, 30);
   localStorage.setItem(HISTORY_KEY, JSON.stringify(next));
   renderHistory();
 }
@@ -53,54 +84,83 @@ function renderHistory() {
   $("historyList").innerHTML = history.map((item) => `
     <article class="historyItem">
       <div>
-        <strong>${item.symbol} ${item.choice} - ${item.window}</strong>
-        <span class="${item.change24h >= 0 ? "positive" : "negative"}">${formatUsd(item.price)} | ${formatChange(item.change24h)}</span>
+        <strong>${escapeHtml(item.symbol)} ${escapeHtml(item.choice)} - ${escapeHtml(item.window)}</strong>
+        <span class="${item.change24h >= 0 ? "positive" : "negative"}">
+          ${formatUsd(item.price)} | ${formatChange(item.change24h)} | ${escapeHtml(item.amount)} RITUAL
+        </span>
       </div>
-      <code>${item.signature.slice(0, 18)}...${item.signature.slice(-12)}</code>
+      <code>${escapeHtml(item.signature.slice(0, 18))}...${escapeHtml(item.signature.slice(-12))}</code>
     </article>
   `).join("");
 }
 
 function updateWalletStatus() {
-  if (!account) {
-    $("walletStatus").textContent = "Not connected";
-    $("connectButton").textContent = "Connect Wallet";
-    return;
-  }
-  $("walletStatus").textContent = `${account.slice(0, 6)}...${account.slice(-4)}`;
-  $("connectButton").textContent = `${account.slice(0, 6)}...${account.slice(-4)}`;
+  const connected = Boolean(account);
+  $("walletBox").classList.toggle("connected", connected);
+  $("walletStatus").textContent = connected ? shortAddress(account) : "Not connected";
+  $("walletButtonText").textContent = connected ? shortAddress(account) : "Connect Wallet";
+  $("walletAddressText").textContent = connected ? account : "Not connected";
+  $("chainText").textContent = chainId ? `Chain ${chainId}` : "Ritual testnet";
+  $("walletMenu").classList.add("hidden");
+}
+
+function filteredMarkets() {
+  const query = $("searchInput").value.trim().toLowerCase();
+  if (!query) return markets;
+  return markets.filter((coin) => (
+    coin.name.toLowerCase().includes(query) ||
+    coin.symbol.toLowerCase().includes(query)
+  ));
+}
+
+function updateTicker(market) {
+  const yes = syntheticYes(market.price_change_percentage_24h);
+  $("tickerCoin").textContent = market.symbol.toUpperCase();
+  $("tickerPrice").textContent = formatUsd(market.current_price);
+  $("tickerChange").textContent = formatChange(market.price_change_percentage_24h);
+  $("tickerChange").className = market.price_change_percentage_24h >= 0 ? "positive" : "negative";
+  $("tickerOdds").style.width = `${yes}%`;
+  $("tickerOddsText").textContent = `YES ${yes} / NO ${100 - yes}`;
 }
 
 function chooseMarket(market) {
   selectedMarket = market;
-  $("selectedMarketText").textContent = `${market.symbol}: ${formatUsd(market.current_price)} - predict direction`;
+  const yes = syntheticYes(market.price_change_percentage_24h);
+  $("selectedMarketText").textContent = `${market.symbol.toUpperCase()}: ${formatUsd(market.current_price)}`;
+  $("selectedMarketMeta").textContent = `${formatChange(market.price_change_percentage_24h)} 24h | YES ${yes} / NO ${100 - yes} | Vol ${formatCompact(market.total_volume)}`;
+  updateTicker(market);
   renderMarkets();
-  $("tickerCoin").textContent = market.symbol;
-  $("tickerPrice").textContent = formatUsd(market.current_price);
-  $("tickerChange").textContent = formatChange(market.price_change_percentage_24h || 0);
-  $("tickerChange").className = (market.price_change_percentage_24h || 0) >= 0 ? "positive" : "negative";
 }
 
 function renderMarkets() {
-  if (!markets.length) {
-    $("marketGrid").innerHTML = '<p class="muted">No market data loaded.</p>';
+  const coins = filteredMarkets();
+  $("marketCount").textContent = `${coins.length} markets`;
+
+  if (!coins.length) {
+    $("marketGrid").innerHTML = '<p class="muted">No coins found.</p>';
     return;
   }
 
-  $("marketGrid").innerHTML = markets.map((market) => {
+  $("marketGrid").innerHTML = coins.map((market) => {
     const change = market.price_change_percentage_24h || 0;
+    const yes = syntheticYes(change);
     const isSelected = selectedMarket?.id === market.id;
+    const symbol = escapeHtml(market.symbol.toUpperCase());
+    const name = escapeHtml(market.name);
+    const image = escapeHtml(market.image);
     return `
-      <button class="marketCard ${isSelected ? "selected" : ""}" type="button" data-market="${market.id}">
+      <button class="marketCard ${isSelected ? "selected" : ""}" type="button" data-market="${escapeHtml(market.id)}">
         <div class="coinMeta">
           <div>
-            <strong>${market.symbol.toUpperCase()}</strong>
-            <p class="muted">${market.name}</p>
+            <strong>${symbol}</strong>
+            <p class="muted">${name}</p>
           </div>
-          <img src="${market.image}" alt="" />
+          <img src="${image}" alt="" />
         </div>
         <div class="coinPrice">${formatUsd(market.current_price)}</div>
         <span class="${change >= 0 ? "positive" : "negative"}">${formatChange(change)} 24h</span>
+        <div class="oddsBar" aria-hidden="true"><span style="width:${yes}%"></span></div>
+        <small>YES ${yes} / NO ${100 - yes} | Vol ${formatCompact(market.total_volume)}</small>
       </button>
     `;
   }).join("");
@@ -114,26 +174,31 @@ function renderMarkets() {
 }
 
 async function loadMarkets() {
+  $("marketStatus").textContent = "Updating live prices...";
   setStatus("Refreshing market data...");
-  const ids = COINS.map((coin) => coin.id).join(",");
+  const category = COIN_SETS[$("coinSet").value];
   const url = new URL("https://api.coingecko.com/api/v3/coins/markets");
   url.searchParams.set("vs_currency", "usd");
-  url.searchParams.set("ids", ids);
   url.searchParams.set("order", "market_cap_desc");
-  url.searchParams.set("per_page", "20");
+  url.searchParams.set("per_page", "50");
   url.searchParams.set("page", "1");
   url.searchParams.set("sparkline", "false");
   url.searchParams.set("price_change_percentage", "24h");
+  if (category) url.searchParams.set("category", category);
 
   const response = await fetch(url);
   if (!response.ok) throw new Error(`CoinGecko error ${response.status}`);
   markets = await response.json();
-  if (!selectedMarket && markets[0]) chooseMarket(markets[0]);
-  if (selectedMarket) {
-    const refreshed = markets.find((market) => market.id === selectedMarket.id);
-    if (refreshed) chooseMarket(refreshed);
+
+  if (!selectedMarket || !markets.some((market) => market.id === selectedMarket.id)) {
+    selectedMarket = markets[0] ?? null;
+  } else {
+    selectedMarket = markets.find((market) => market.id === selectedMarket.id);
   }
+
+  if (selectedMarket) chooseMarket(selectedMarket);
   renderMarkets();
+  $("marketStatus").textContent = `Live: ${new Date().toLocaleTimeString()}`;
   setStatus("Market data refreshed. Updates every 60 seconds.");
 }
 
@@ -145,8 +210,18 @@ async function connectWallet() {
 
   const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
   account = accounts[0] || null;
+  chainId = await window.ethereum.request({ method: "eth_chainId" }).catch(() => null);
+  localStorage.removeItem(DISCONNECT_KEY);
   updateWalletStatus();
   setStatus(account ? "Wallet connected." : "No account returned.", !account);
+}
+
+function disconnectWallet() {
+  account = null;
+  chainId = null;
+  localStorage.setItem(DISCONNECT_KEY, "1");
+  updateWalletStatus();
+  setStatus("Wallet disconnected on this dApp. Clear connected sites in the extension to revoke permission.");
 }
 
 function buildOrder() {
@@ -158,19 +233,21 @@ function buildOrder() {
   return {
     app: "Ritual Prediction Arena",
     type: "prediction_order",
-    chainId: "0x7bb",
+    chainId: chainId || "0x7bb",
     account,
     market: {
       id: selectedMarket.id,
       symbol: selectedMarket.symbol.toUpperCase(),
       priceUsd: selectedMarket.current_price,
       change24h: selectedMarket.price_change_percentage_24h || 0,
+      yesOdds: syntheticYes(selectedMarket.price_change_percentage_24h),
     },
     choice: selectedChoice,
     amount,
     window: $("windowSelect").value,
     createdAt: new Date().toISOString(),
     dataSource: "CoinGecko",
+    nonce: Date.now(),
   };
 }
 
@@ -207,22 +284,41 @@ document.querySelectorAll(".choiceButton").forEach((button) => {
   });
 });
 
-$("connectButton").addEventListener("click", () => connectWallet().catch((error) => setStatus(error.message, true)));
-$("refreshButton").addEventListener("click", () => loadMarkets().catch((error) => setStatus(error.message, true)));
+$("connectButton").addEventListener("click", async () => {
+  if (account) {
+    $("walletMenu").classList.toggle("hidden");
+    return;
+  }
+  await connectWallet().catch((error) => setStatus(error.message, true));
+});
+$("disconnectButton").addEventListener("click", disconnectWallet);
+$("refreshButton").addEventListener("click", () => loadMarkets().catch((error) => {
+  $("marketStatus").textContent = error.message;
+  setStatus(error.message, true);
+}));
+$("searchInput").addEventListener("input", renderMarkets);
+$("coinSet").addEventListener("change", () => loadMarkets().catch((error) => setStatus(error.message, true)));
 $("signButton").addEventListener("click", signPrediction);
 $("clearHistoryButton").addEventListener("click", () => {
   localStorage.removeItem(HISTORY_KEY);
   renderHistory();
 });
+document.addEventListener("click", (event) => {
+  if (!$("walletBox").contains(event.target)) $("walletMenu").classList.add("hidden");
+});
 
-if (window.ethereum?.request) {
-  window.ethereum.request({ method: "eth_accounts" }).then((accounts) => {
+if (window.ethereum?.request && localStorage.getItem(DISCONNECT_KEY) !== "1") {
+  window.ethereum.request({ method: "eth_accounts" }).then(async (accounts) => {
     account = accounts[0] || null;
+    if (account) chainId = await window.ethereum.request({ method: "eth_chainId" }).catch(() => null);
     updateWalletStatus();
   }).catch(() => {});
 }
 
-loadMarkets().catch((error) => setStatus(error.message, true));
+loadMarkets().catch((error) => {
+  $("marketStatus").textContent = error.message;
+  setStatus(error.message, true);
+});
 renderHistory();
 updateWalletStatus();
 setInterval(() => loadMarkets().catch((error) => setStatus(error.message, true)), 60000);

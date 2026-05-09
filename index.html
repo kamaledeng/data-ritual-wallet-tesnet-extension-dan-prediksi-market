@@ -8,15 +8,39 @@
   </head>
   <body>
     <main class="app">
+      <nav class="ritualNav" aria-label="Ritual links">
+        <a class="ritualBrand" href="https://ritual.net" target="_blank" rel="noreferrer">
+          <span class="logoMark">R</span>
+          <span>Ritual</span>
+        </a>
+        <div class="ritualLinks">
+          <a href="https://explorer.ritualfoundation.org" target="_blank" rel="noreferrer">Explorer</a>
+          <a href="https://docs.ritualfoundation.org" target="_blank" rel="noreferrer">Docs</a>
+          <a href="https://faucet.ritualfoundation.org" target="_blank" rel="noreferrer">Faucet</a>
+        </div>
+      </nav>
+
       <header class="topbar">
         <div class="brand">
-          <span class="logoMark">R</span>
+          <span class="logoMark large">R</span>
           <div>
-            <p class="eyebrow">Ritual Testnet</p>
+            <p class="eyebrow">Ritual Testnet dApp</p>
             <h1>Prediction Arena</h1>
           </div>
         </div>
-        <button id="connectButton" class="walletButton" type="button">Connect Wallet</button>
+
+        <div id="walletBox" class="walletBox">
+          <button id="connectButton" class="walletButton" type="button">
+            <span id="walletDot" class="walletDot"></span>
+            <span id="walletButtonText">Connect Wallet</span>
+          </button>
+          <div id="walletMenu" class="walletMenu hidden">
+            <p class="label">Connected wallet</p>
+            <strong id="walletAddressText">Not connected</strong>
+            <span id="chainText" class="muted">Ritual testnet</span>
+            <button id="disconnectButton" class="dangerButton" type="button">Disconnect</button>
+          </div>
+        </div>
       </header>
 
       <section class="hero">
@@ -24,25 +48,48 @@
           <p class="eyebrow">Live crypto markets</p>
           <h2>Predict market direction with your Ritual wallet.</h2>
           <p>
-            Prices refresh from CoinGecko. Choose a coin, pick YES or NO, then sign an
-            off-chain prediction order with your wallet.
+            Live prices come from CoinGecko. Choose a market, pick YES or NO, then
+            sign an off-chain prediction order using the Ritual wallet extension.
           </p>
         </div>
+
         <div class="marketTicker" aria-live="polite">
+          <p class="label">Featured market</p>
           <span id="tickerCoin">BTC</span>
           <strong id="tickerPrice">$0.00</strong>
           <em id="tickerChange">0.00%</em>
+          <div class="oddsBar" aria-hidden="true"><span id="tickerOdds"></span></div>
+          <small id="tickerOddsText">YES 50 / NO 50</small>
         </div>
       </section>
 
+      <section class="marketToolbar">
+        <label class="field compact">
+          Search coin
+          <input id="searchInput" autocomplete="off" placeholder="BTC, ETH, SOL..." />
+        </label>
+        <label class="field compact">
+          Market set
+          <select id="coinSet">
+            <option value="top">Top 50</option>
+            <option value="defi">DeFi</option>
+            <option value="ai">AI</option>
+            <option value="meme">Meme</option>
+            <option value="layer1">Layer 1</option>
+          </select>
+        </label>
+        <button id="refreshButton" class="ghostButton" type="button">Refresh</button>
+        <p id="marketStatus" class="toolbarStatus">Loading live markets...</p>
+      </section>
+
       <section class="layout">
-        <div class="panel">
+        <div class="panel marketsPanel">
           <div class="sectionHeader">
             <div>
               <p class="eyebrow">Markets</p>
               <h2>Pick a prediction</h2>
             </div>
-            <button id="refreshButton" class="ghostButton" type="button">Refresh</button>
+            <span id="marketCount" class="statusPill">0 markets</span>
           </div>
           <div id="marketGrid" class="marketGrid">
             <p class="muted">Loading markets...</p>
@@ -61,6 +108,7 @@
           <div class="selectedMarket">
             <p class="label">Selected market</p>
             <strong id="selectedMarketText">Choose a market first</strong>
+            <span id="selectedMarketMeta" class="muted">No market selected</span>
           </div>
 
           <div class="choiceGrid" role="group" aria-label="Prediction choice">
@@ -79,6 +127,7 @@
               <option value="5m">5 minutes</option>
               <option value="15m">15 minutes</option>
               <option value="1h">1 hour</option>
+              <option value="24h">24 hours</option>
             </select>
           </label>
 
@@ -87,7 +136,7 @@
         </aside>
       </section>
 
-      <section class="panel">
+      <section class="panel historyPanel">
         <div class="sectionHeader">
           <div>
             <p class="eyebrow">Local history</p>
