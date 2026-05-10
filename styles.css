@@ -332,32 +332,6 @@ h2 {
   box-shadow: 0 0 0 5px rgba(6, 173, 114, 0.18);
 }
 
-.walletMenu {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 10px);
-  z-index: 20;
-  width: min(390px, calc(100vw - 48px));
-  padding: 16px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: #07120e;
-  box-shadow: var(--shadow);
-}
-
-.profileMenuHeader {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.walletMenu strong,
-.walletMenu span {
-  display: block;
-  overflow-wrap: anywhere;
-}
-
 .miniButton {
   min-height: 32px;
   border: 1px solid var(--line);
@@ -370,47 +344,11 @@ h2 {
   font-weight: 900;
 }
 
-.profileStats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  margin-top: 14px;
-}
-
-.profileStats div {
-  min-width: 0;
-  padding: 10px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: rgba(140, 227, 123, 0.08);
-}
-
-.profileStats span {
-  color: var(--muted);
-  font-size: 0.68rem;
-  font-weight: 900;
-  text-transform: uppercase;
-}
-
-.profileStats strong {
-  margin-top: 4px;
-  color: var(--text);
-  font-size: 0.98rem;
-}
-
 .profileHint {
   margin: 12px 0 0;
   color: var(--muted);
   font-size: 0.82rem;
   font-weight: 700;
-}
-
-.dangerButton {
-  width: 100%;
-  margin-top: 14px;
-  border-color: rgba(255, 111, 125, 0.45);
-  background: rgba(255, 111, 125, 0.1);
-  color: #ffd5da;
 }
 
 .hidden {
@@ -895,24 +833,6 @@ body.lightTheme .profileMetricCard {
   font-size: clamp(1rem, 1.35vw, 1.35rem);
 }
 
-.profileActionButton {
-  min-height: 44px;
-  border: 1px solid rgba(140, 227, 123, 0.42);
-  border-radius: 8px;
-  padding: 0 16px;
-  background: rgba(140, 227, 123, 0.09);
-  color: var(--green);
-  cursor: pointer;
-  font-weight: 900;
-  white-space: nowrap;
-}
-
-.profileActionButton:hover,
-.profileActionButton:focus-visible {
-  border-color: rgba(140, 227, 123, 0.72);
-  background: rgba(140, 227, 123, 0.16);
-}
-
 .profileMetricGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -1106,22 +1026,9 @@ body.lightTheme .profileMetricCard {
     width: 100%;
   }
 
-  .walletMenu {
-    left: 0;
-    right: auto;
-  }
-
-  .profileStats {
-    grid-template-columns: 1fr;
-  }
-
   .profileHeroCard,
   .profileMetricGrid {
     grid-template-columns: 1fr;
-  }
-
-  .profileActionButton {
-    width: 100%;
   }
 
   .toolbarStatus {
