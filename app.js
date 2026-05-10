@@ -147,6 +147,8 @@ function updateWalletStatus() {
   $("walletBox").classList.toggle("connected", connected);
   $("walletStatus").textContent = connected ? shortAddress(account) : "Not connected";
   $("walletButtonText").textContent = connected ? shortAddress(account) : "Connect Wallet";
+  $("connectButton").disabled = connected;
+  $("navDisconnectButton").classList.toggle("hidden", !connected);
   $("networkBadgeText").textContent = networkText;
   $("portfolioWallet").textContent = connected ? shortAddress(account) : "Not connected";
   $("profileAddressText").textContent = connected ? account : "Connect wallet first";
@@ -391,6 +393,7 @@ $("connectButton").addEventListener("click", async () => {
   if (account) return;
   await connectWallet().catch((error) => setStatus(error.message, true));
 });
+$("navDisconnectButton").addEventListener("click", disconnectWallet);
 $("profileRefreshButton").addEventListener("click", refreshWalletProfile);
 $("themeButton").addEventListener("click", toggleTheme);
 $("refreshButton").addEventListener("click", () => loadMarkets().catch((error) => {
@@ -404,15 +407,6 @@ $("clearHistoryButton").addEventListener("click", () => {
   localStorage.removeItem(HISTORY_KEY);
   renderHistory();
 });
-if (window.ethereum?.request && localStorage.getItem(DISCONNECT_KEY) !== "1") {
-  window.ethereum.request({ method: "eth_accounts" }).then(async (accounts) => {
-    account = accounts[0] || null;
-    if (account) chainId = await window.ethereum.request({ method: "eth_chainId" }).catch(() => null);
-    updateWalletStatus();
-    if (account) refreshWalletProfile();
-  }).catch(() => {});
-}
-
 loadMarkets().catch((error) => {
   $("marketStatus").textContent = error.message;
   setStatus(error.message, true);

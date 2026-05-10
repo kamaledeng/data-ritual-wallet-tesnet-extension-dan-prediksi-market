@@ -272,6 +272,9 @@ h2 {
 
 .walletBox {
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .walletButton,
@@ -330,6 +333,28 @@ h2 {
 .walletBox.connected .walletDot {
   background: var(--green-strong);
   box-shadow: 0 0 0 5px rgba(6, 173, 114, 0.18);
+}
+
+.navDisconnectButton {
+  min-height: 42px;
+  border: 1px solid rgba(255, 111, 125, 0.42);
+  border-radius: 8px;
+  padding: 0 12px;
+  background: rgba(255, 111, 125, 0.1);
+  color: #ffd5da;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 900;
+}
+
+.navDisconnectButton:hover,
+.navDisconnectButton:focus-visible {
+  border-color: rgba(255, 111, 125, 0.72);
+  background: rgba(255, 111, 125, 0.16);
+}
+
+.walletButton:disabled {
+  cursor: default;
 }
 
 .miniButton {
@@ -1024,6 +1049,14 @@ body.lightTheme .profileMetricCard {
   .walletButton,
   .field.compact {
     width: 100%;
+  }
+
+  .walletBox {
+    align-items: stretch;
+  }
+
+  .navDisconnectButton {
+    flex: 1;
   }
 
   .profileHeroCard,
