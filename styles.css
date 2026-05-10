@@ -626,6 +626,42 @@ body.lightTheme .field select {
   text-align: right;
 }
 
+.makerCredit {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(6, 173, 114, 0.12);
+}
+
+.makerCredit img {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(140, 227, 123, 0.55);
+}
+
+.makerCredit span,
+.makerCredit strong {
+  display: block;
+  line-height: 1.05;
+}
+
+.makerCredit span {
+  color: var(--muted);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.makerCredit strong {
+  color: var(--text);
+  font-size: 1rem;
+}
+
 .historyItem code {
   color: var(--muted);
   font-size: 0.78rem;
