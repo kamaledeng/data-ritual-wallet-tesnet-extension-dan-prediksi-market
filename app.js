@@ -88,6 +88,7 @@ function saveHistory(item) {
 
 function renderHistory() {
   const history = getHistory();
+  renderPortfolioStats(history);
   if (!history.length) {
     $("historyList").innerHTML = '<p class="muted">No signed predictions yet.</p>';
     return;
@@ -106,6 +107,15 @@ function renderHistory() {
   `).join("");
 }
 
+function renderPortfolioStats(history = getHistory()) {
+  const totalAmount = history.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  const yesCount = history.filter((item) => item.choice === "YES").length;
+  const noCount = history.filter((item) => item.choice === "NO").length;
+  $("statTotalPredictions").textContent = history.length.toString();
+  $("statSignedVolume").textContent = totalAmount ? `${totalAmount.toFixed(2)} RITUAL` : "0";
+  $("statFavoriteSide").textContent = yesCount || noCount ? (yesCount >= noCount ? "YES" : "NO") : "-";
+}
+
 function updateWalletStatus() {
   const connected = Boolean(account);
   $("walletBox").classList.toggle("connected", connected);
@@ -113,6 +123,7 @@ function updateWalletStatus() {
   $("walletButtonText").textContent = connected ? shortAddress(account) : "Connect Wallet";
   $("walletAddressText").textContent = connected ? account : "Not connected";
   $("chainText").textContent = chainId ? `Chain ${chainId}` : "Ritual testnet";
+  $("portfolioWallet").textContent = connected ? shortAddress(account) : "Not connected";
   $("walletMenu").classList.add("hidden");
 }
 
@@ -293,6 +304,16 @@ document.querySelectorAll(".choiceButton").forEach((button) => {
     selectedChoice = button.dataset.choice;
     document.querySelectorAll(".choiceButton").forEach((item) => item.classList.remove("selected"));
     button.classList.add("selected");
+  });
+});
+
+document.querySelectorAll(".arenaTab").forEach((button) => {
+  button.addEventListener("click", () => {
+    document.querySelectorAll(".arenaTab").forEach((item) => item.classList.remove("active"));
+    document.querySelectorAll(".arenaView").forEach((item) => item.classList.add("hidden"));
+    button.classList.add("active");
+    $(button.dataset.arenaTab).classList.remove("hidden");
+    renderPortfolioStats();
   });
 });
 

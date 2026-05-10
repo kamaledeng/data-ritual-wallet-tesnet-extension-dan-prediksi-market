@@ -88,70 +88,129 @@
         <p id="marketStatus" class="toolbarStatus">Loading live markets...</p>
       </section>
 
-      <section class="layout">
-        <div class="panel marketsPanel">
-          <div class="sectionHeader">
-            <div>
-              <p class="eyebrow">Markets</p>
-              <h2>Pick a prediction</h2>
+      <nav class="arenaTabs" aria-label="Arena sections">
+        <button class="arenaTab active" type="button" data-arena-tab="marketsView">Markets</button>
+        <button class="arenaTab" type="button" data-arena-tab="portfolioView">Portfolio</button>
+        <button class="arenaTab" type="button" data-arena-tab="leaderboardView">Leaderboard</button>
+      </nav>
+
+      <section id="marketsView" class="arenaView">
+        <section class="layout">
+          <div class="panel marketsPanel">
+            <div class="sectionHeader">
+              <div>
+                <p class="eyebrow">Markets</p>
+                <h2>Pick a prediction</h2>
+              </div>
+              <span id="marketCount" class="statusPill">0 markets</span>
             </div>
-            <span id="marketCount" class="statusPill">0 markets</span>
-          </div>
-          <div id="marketGrid" class="marketGrid">
-            <p class="muted">Loading markets...</p>
-          </div>
-        </div>
-
-        <aside class="panel predictionPanel">
-          <div class="sectionHeader">
-            <div>
-              <p class="eyebrow">Order</p>
-              <h2>Sign prediction</h2>
+            <div id="marketGrid" class="marketGrid">
+              <p class="muted">Loading markets...</p>
             </div>
-            <span id="walletStatus" class="statusPill">Not connected</span>
           </div>
 
-          <div class="selectedMarket">
-            <p class="label">Selected market</p>
-            <strong id="selectedMarketText">Choose a market first</strong>
-            <span id="selectedMarketMeta" class="muted">No market selected</span>
-          </div>
+          <aside class="panel predictionPanel">
+            <div class="sectionHeader">
+              <div>
+                <p class="eyebrow">Order</p>
+                <h2>Sign prediction</h2>
+              </div>
+              <span id="walletStatus" class="statusPill">Not connected</span>
+            </div>
 
-          <div class="choiceGrid" role="group" aria-label="Prediction choice">
-            <button class="choiceButton selected" type="button" data-choice="YES">YES</button>
-            <button class="choiceButton" type="button" data-choice="NO">NO</button>
-          </div>
+            <div class="selectedMarket">
+              <p class="label">Selected market</p>
+              <strong id="selectedMarketText">Choose a market first</strong>
+              <span id="selectedMarketMeta" class="muted">No market selected</span>
+            </div>
 
-          <label class="field">
-            Amount
-            <input id="amountInput" type="number" min="0.01" step="0.01" value="1" />
-          </label>
+            <div class="choiceGrid" role="group" aria-label="Prediction choice">
+              <button class="choiceButton selected" type="button" data-choice="YES">YES</button>
+              <button class="choiceButton" type="button" data-choice="NO">NO</button>
+            </div>
 
-          <label class="field">
-            Window
-            <select id="windowSelect">
-              <option value="5m">5 minutes</option>
-              <option value="15m">15 minutes</option>
-              <option value="1h">1 hour</option>
-              <option value="24h">24 hours</option>
-            </select>
-          </label>
+            <label class="field">
+              Amount
+              <input id="amountInput" type="number" min="0.01" step="0.01" value="1" />
+            </label>
 
-          <button id="signButton" class="primaryButton" type="button">Sign Prediction</button>
-          <p id="statusText" class="statusText" role="status"></p>
-        </aside>
+            <label class="field">
+              Window
+              <select id="windowSelect">
+                <option value="5m">5 minutes</option>
+                <option value="15m">15 minutes</option>
+                <option value="1h">1 hour</option>
+                <option value="24h">24 hours</option>
+              </select>
+            </label>
+
+            <button id="signButton" class="primaryButton" type="button">Sign Prediction</button>
+            <p id="statusText" class="statusText" role="status"></p>
+          </aside>
+        </section>
       </section>
 
-      <section class="panel historyPanel">
+      <section id="portfolioView" class="arenaView hidden">
+        <section class="panel portfolioPanel">
+          <div class="sectionHeader">
+            <div>
+              <p class="eyebrow">Portfolio</p>
+              <h2>Your prediction activity</h2>
+            </div>
+            <span id="portfolioWallet" class="statusPill">Not connected</span>
+          </div>
+          <div class="statsGrid">
+            <div class="statCard">
+              <span>Total predictions</span>
+              <strong id="statTotalPredictions">0</strong>
+            </div>
+            <div class="statCard">
+              <span>Signed volume</span>
+              <strong id="statSignedVolume">0</strong>
+            </div>
+            <div class="statCard">
+              <span>Favorite side</span>
+              <strong id="statFavoriteSide">-</strong>
+            </div>
+          </div>
+          <div class="sectionHeader compactHeader">
+            <div>
+              <p class="eyebrow">History</p>
+              <h2>Local signed orders</h2>
+            </div>
+            <button id="clearHistoryButton" class="ghostButton" type="button">Clear</button>
+          </div>
+          <div id="historyList" class="historyList">
+            <p class="muted">No signed predictions yet.</p>
+          </div>
+        </section>
+      </section>
+
+      <section id="leaderboardView" class="arenaView hidden">
+        <section class="panel comingSoonPanel">
+          <div class="comingSoonOrb">
+            <img src="assets/ritual-logo-green.png" alt="" />
+          </div>
+          <p class="eyebrow">Leaderboard</p>
+          <h2>Coming soon</h2>
+          <p>
+            Trader rankings, prediction points, win streaks, and Ritual arena badges
+            will appear here after the scoring system is ready.
+          </p>
+          <div class="comingSoonGrid">
+            <span>Points engine</span>
+            <span>Win-rate tracking</span>
+            <span>Season rewards</span>
+          </div>
+        </section>
+      </section>
+
+      <section class="panel historyPanel hidden" aria-hidden="true">
         <div class="sectionHeader">
           <div>
             <p class="eyebrow">Local history</p>
             <h2>Signed predictions</h2>
           </div>
-          <button id="clearHistoryButton" class="ghostButton" type="button">Clear</button>
-        </div>
-        <div id="historyList" class="historyList">
-          <p class="muted">No signed predictions yet.</p>
         </div>
       </section>
 
