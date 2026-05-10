@@ -79,6 +79,12 @@ function scoreFromProfile(balanceHex, txCount, signedCount) {
   return balancePoints + txPoints + signedPoints;
 }
 
+function chainLabel(value) {
+  if (!value) return "Ritual Testnet";
+  const numeric = Number(BigInt(value));
+  return numeric === 1979 ? "Ritual Testnet" : `Chain ${numeric}`;
+}
+
 function formatChange(value) {
   const safeValue = Number(value || 0);
   const sign = safeValue >= 0 ? "+" : "";
@@ -132,23 +138,34 @@ function renderPortfolioStats(history = getHistory()) {
   $("statTotalPredictions").textContent = history.length.toString();
   $("statSignedVolume").textContent = totalAmount ? `${totalAmount.toFixed(2)} RITUAL` : "0";
   $("statFavoriteSide").textContent = yesCount || noCount ? (yesCount >= noCount ? "YES" : "NO") : "-";
+  $("profilePageSignedText").textContent = history.length.toString();
 }
 
 function updateWalletStatus() {
   const connected = Boolean(account);
+  const networkText = chainLabel(chainId);
   $("walletBox").classList.toggle("connected", connected);
   $("walletStatus").textContent = connected ? shortAddress(account) : "Not connected";
   $("walletButtonText").textContent = connected ? "Profile" : "Connect Wallet";
   $("walletButtonMeta").textContent = connected ? shortAddress(account) : "Ritual testnet";
   $("walletAddressText").textContent = connected ? account : "Not connected";
-  $("chainText").textContent = chainId ? `Chain ${chainId}` : "Ritual testnet";
+  $("chainText").textContent = networkText;
+  $("networkBadgeText").textContent = networkText;
   $("portfolioWallet").textContent = connected ? shortAddress(account) : "Not connected";
+  $("profileAddressText").textContent = connected ? account : "Connect wallet first";
+  $("profileNetworkText").textContent = connected ? networkText : "Ritual Testnet";
+  $("profileConnectButton").textContent = connected ? "Open Wallet Menu" : "Connect Wallet";
   $("walletMenu").classList.add("hidden");
   if (!connected) {
     $("profileBalanceText").textContent = "-";
     $("profileTxText").textContent = "-";
     $("profileScoreText").textContent = "-";
+    $("profilePageBalanceText").textContent = "-";
+    $("profilePageTxText").textContent = "-";
+    $("profilePageScoreText").textContent = "-";
+    $("profilePageSignedText").textContent = getHistory().length.toString();
     $("profileHint").textContent = "Connect wallet to load Ritual testnet stats.";
+    $("profilePageHint").textContent = "Connect wallet to load profile stats from Ritual RPC.";
   }
 }
 
@@ -158,7 +175,11 @@ async function refreshWalletProfile() {
   $("profileBalanceText").textContent = "...";
   $("profileTxText").textContent = "...";
   $("profileScoreText").textContent = "...";
+  $("profilePageBalanceText").textContent = "...";
+  $("profilePageTxText").textContent = "...";
+  $("profilePageScoreText").textContent = "...";
   $("profileHint").textContent = "Loading Ritual RPC profile...";
+  $("profilePageHint").textContent = "Loading Ritual RPC profile...";
 
   try {
     const [balanceHex, txCountHex] = await Promise.all([
@@ -169,16 +190,30 @@ async function refreshWalletProfile() {
 
     const txCount = Number(BigInt(txCountHex || "0x0"));
     const signedCount = getHistory().length;
-    $("profileBalanceText").textContent = formatRitualBalance(balanceHex);
-    $("profileTxText").textContent = txCount.toLocaleString();
-    $("profileScoreText").textContent = scoreFromProfile(balanceHex, txCount, signedCount).toLocaleString();
-    $("profileHint").textContent = `Real Ritual RPC stats. Score also includes ${signedCount} local signed prediction${signedCount === 1 ? "" : "s"}.`;
+    const balanceText = formatRitualBalance(balanceHex);
+    const txText = txCount.toLocaleString();
+    const scoreText = scoreFromProfile(balanceHex, txCount, signedCount).toLocaleString();
+    const hintText = `Real Ritual RPC stats. Score also includes ${signedCount} local signed prediction${signedCount === 1 ? "" : "s"}.`;
+    $("profileBalanceText").textContent = balanceText;
+    $("profileTxText").textContent = txText;
+    $("profileScoreText").textContent = scoreText;
+    $("profilePageBalanceText").textContent = balanceText;
+    $("profilePageTxText").textContent = txText;
+    $("profilePageScoreText").textContent = scoreText;
+    $("profilePageSignedText").textContent = signedCount.toLocaleString();
+    $("profileHint").textContent = hintText;
+    $("profilePageHint").textContent = hintText;
   } catch (error) {
     if (requestId !== profileRequestId) return;
     $("profileBalanceText").textContent = "-";
     $("profileTxText").textContent = "-";
     $("profileScoreText").textContent = "-";
+    $("profilePageBalanceText").textContent = "-";
+    $("profilePageTxText").textContent = "-";
+    $("profilePageScoreText").textContent = "-";
+    $("profilePageSignedText").textContent = getHistory().length.toString();
     $("profileHint").textContent = error.message || "Could not load Ritual RPC profile.";
+    $("profilePageHint").textContent = error.message || "Could not load Ritual RPC profile.";
   }
 }
 
@@ -381,8 +416,17 @@ $("connectButton").addEventListener("click", async () => {
   }
   await connectWallet().catch((error) => setStatus(error.message, true));
 });
+$("profileConnectButton").addEventListener("click", async () => {
+  if (account) {
+    $("walletMenu").classList.remove("hidden");
+    refreshWalletProfile();
+    return;
+  }
+  await connectWallet().catch((error) => setStatus(error.message, true));
+});
 $("disconnectButton").addEventListener("click", disconnectWallet);
 $("refreshProfileButton").addEventListener("click", refreshWalletProfile);
+$("profileRefreshButton").addEventListener("click", refreshWalletProfile);
 $("themeButton").addEventListener("click", toggleTheme);
 $("refreshButton").addEventListener("click", () => loadMarkets().catch((error) => {
   $("marketStatus").textContent = error.message;

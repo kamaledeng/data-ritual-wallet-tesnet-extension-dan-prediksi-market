@@ -20,6 +20,7 @@
             <button class="arenaTab active" type="button" data-arena-tab="marketsView">Markets</button>
             <button class="arenaTab" type="button" data-arena-tab="portfolioView">Portfolio</button>
             <button class="arenaTab" type="button" data-arena-tab="leaderboardView">Leaderboard</button>
+            <button class="arenaTab" type="button" data-arena-tab="profileView">Profile</button>
           </nav>
         </div>
 
@@ -32,6 +33,10 @@
             <span class="themeIcon" aria-hidden="true"></span>
             <span id="themeButtonText">Dark</span>
           </button>
+          <span id="networkBadge" class="networkBadge">
+            <span class="networkIcon" aria-hidden="true"></span>
+            <span id="networkBadgeText">Ritual Testnet</span>
+          </span>
           <div id="walletBox" class="walletBox">
             <button id="connectButton" class="walletButton" type="button">
               <span id="walletDot" class="walletDot"></span>
@@ -217,6 +222,55 @@
             <span>Win-rate tracking</span>
             <span>Season rewards</span>
           </div>
+        </section>
+      </section>
+
+      <section id="profileView" class="arenaView hidden">
+        <section class="panel profileViewPanel">
+          <div class="sectionHeader">
+            <div>
+              <p class="eyebrow">Profile</p>
+              <h2>Wallet profile</h2>
+            </div>
+            <button id="profileRefreshButton" class="ghostButton" type="button">Refresh profile</button>
+          </div>
+
+          <div class="profileHeroCard">
+            <div class="profileAvatar" aria-hidden="true">
+              <img src="assets/ritual-logo-green.png" alt="" />
+            </div>
+            <div>
+              <p class="label">Connected wallet</p>
+              <strong id="profileAddressText">Connect wallet first</strong>
+              <span id="profileNetworkText" class="muted">Ritual Testnet</span>
+            </div>
+            <button id="profileConnectButton" class="primaryButton profileConnectButton" type="button">Connect Wallet</button>
+          </div>
+
+          <div class="profileMetricGrid">
+            <article class="profileMetricCard">
+              <span>Balance</span>
+              <strong id="profilePageBalanceText">-</strong>
+              <small>Real RPC balance</small>
+            </article>
+            <article class="profileMetricCard">
+              <span>Testnet tx</span>
+              <strong id="profilePageTxText">-</strong>
+              <small>RPC transaction count</small>
+            </article>
+            <article class="profileMetricCard">
+              <span>Score</span>
+              <strong id="profilePageScoreText">-</strong>
+              <small>Balance + tx + orders</small>
+            </article>
+            <article class="profileMetricCard">
+              <span>Signed orders</span>
+              <strong id="profilePageSignedText">0</strong>
+              <small>Saved locally</small>
+            </article>
+          </div>
+
+          <p id="profilePageHint" class="profileHint">Connect wallet to load profile stats from Ritual RPC.</p>
         </section>
       </section>
 

@@ -149,6 +149,28 @@ a {
   font-weight: 900;
 }
 
+.networkBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 42px;
+  padding: 0 13px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(15, 27, 22, 0.78);
+  color: var(--text);
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.networkIcon {
+  width: 13px;
+  height: 18px;
+  clip-path: polygon(50% 0, 92% 42%, 50% 100%, 8% 42%);
+  background: linear-gradient(180deg, var(--green), var(--green-strong));
+  box-shadow: 0 0 18px rgba(140, 227, 123, 0.42);
+}
+
 .themeIcon {
   position: relative;
   width: 14px;
@@ -799,6 +821,102 @@ body.lightTheme .statCard {
   background: rgba(255, 255, 255, 0.76);
 }
 
+.profileViewPanel {
+  max-width: 980px;
+  margin: 0 auto 20px;
+}
+
+.profileHeroCard {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 12% 10%, rgba(140, 227, 123, 0.16), transparent 34%),
+    rgba(5, 15, 11, 0.68);
+}
+
+body.lightTheme .profileHeroCard,
+body.lightTheme .profileMetricCard {
+  background: rgba(255, 255, 255, 0.74);
+}
+
+.profileAvatar {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  border: 1px solid rgba(140, 227, 123, 0.45);
+  border-radius: 16px;
+  background: rgba(6, 173, 114, 0.12);
+}
+
+.profileAvatar img {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+}
+
+.profileHeroCard strong,
+.profileHeroCard span {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.profileHeroCard strong {
+  font-size: clamp(1rem, 1.35vw, 1.35rem);
+}
+
+.profileConnectButton {
+  width: auto;
+  margin-top: 0;
+  padding: 0 18px;
+  white-space: nowrap;
+}
+
+.profileMetricGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.profileMetricCard {
+  min-height: 138px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(5, 15, 11, 0.68);
+}
+
+.profileMetricCard span,
+.profileMetricCard small {
+  display: block;
+  color: var(--muted);
+  font-weight: 900;
+}
+
+.profileMetricCard span {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.profileMetricCard strong {
+  display: block;
+  margin: 16px 0 8px;
+  font-size: clamp(1.45rem, 2vw, 2.1rem);
+  line-height: 1;
+  overflow-wrap: anywhere;
+}
+
+.profileMetricCard small {
+  font-size: 0.78rem;
+}
+
 .historyList {
   display: grid;
   gap: 12px;
@@ -957,6 +1075,15 @@ body.lightTheme .statCard {
 
   .profileStats {
     grid-template-columns: 1fr;
+  }
+
+  .profileHeroCard,
+  .profileMetricGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .profileConnectButton {
+    width: 100%;
   }
 
   .toolbarStatus {
