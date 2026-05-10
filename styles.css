@@ -131,7 +131,20 @@ a {
 
 .ritualLinks a {
   color: var(--muted);
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 0 12px;
   font-weight: 800;
+}
+
+.ritualLinks a:hover,
+.ritualLinks a:focus-visible {
+  color: var(--text);
+  border-color: rgba(140, 227, 123, 0.45);
+  background: rgba(140, 227, 123, 0.08);
 }
 
 .themeButton {
@@ -826,8 +839,12 @@ body.lightTheme .statCard {
 }
 
 .profileViewPanel {
-  max-width: 980px;
+  max-width: 1080px;
   margin: 0 auto 20px;
+  padding: 28px;
+  background:
+    radial-gradient(circle at 15% 0%, rgba(140, 227, 123, 0.13), transparent 34%),
+    rgba(15, 27, 22, 0.94);
 }
 
 .profileHeroCard {
@@ -835,12 +852,13 @@ body.lightTheme .statCard {
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 16px;
-  padding: 18px;
+  padding: 22px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background:
-    radial-gradient(circle at 12% 10%, rgba(140, 227, 123, 0.16), transparent 34%),
-    rgba(5, 15, 11, 0.68);
+    linear-gradient(135deg, rgba(140, 227, 123, 0.12), transparent 48%),
+    rgba(5, 15, 11, 0.7);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 body.lightTheme .profileHeroCard,
@@ -851,17 +869,20 @@ body.lightTheme .profileMetricCard {
 .profileAvatar {
   display: grid;
   place-items: center;
-  width: 58px;
-  height: 58px;
-  border: 1px solid rgba(140, 227, 123, 0.45);
-  border-radius: 16px;
-  background: rgba(6, 173, 114, 0.12);
+  width: 72px;
+  height: 72px;
+  border: 1px solid rgba(140, 227, 123, 0.5);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255, 216, 77, 0.16), transparent 34%),
+    rgba(6, 173, 114, 0.14);
+  box-shadow: 0 18px 50px rgba(6, 173, 114, 0.14);
 }
 
 .profileAvatar img {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
 }
 
 .profileHeroCard strong,
@@ -874,26 +895,39 @@ body.lightTheme .profileMetricCard {
   font-size: clamp(1rem, 1.35vw, 1.35rem);
 }
 
-.profileConnectButton {
-  width: auto;
-  margin-top: 0;
-  padding: 0 18px;
+.profileActionButton {
+  min-height: 44px;
+  border: 1px solid rgba(140, 227, 123, 0.42);
+  border-radius: 8px;
+  padding: 0 16px;
+  background: rgba(140, 227, 123, 0.09);
+  color: var(--green);
+  cursor: pointer;
+  font-weight: 900;
   white-space: nowrap;
+}
+
+.profileActionButton:hover,
+.profileActionButton:focus-visible {
+  border-color: rgba(140, 227, 123, 0.72);
+  background: rgba(140, 227, 123, 0.16);
 }
 
 .profileMetricGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  margin-top: 14px;
+  gap: 14px;
+  margin-top: 16px;
 }
 
 .profileMetricCard {
-  min-height: 138px;
-  padding: 16px;
+  min-height: 150px;
+  padding: 18px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: rgba(5, 15, 11, 0.68);
+  background:
+    linear-gradient(180deg, rgba(140, 227, 123, 0.07), transparent),
+    rgba(5, 15, 11, 0.68);
 }
 
 .profileMetricCard span,
@@ -1086,7 +1120,7 @@ body.lightTheme .profileMetricCard {
     grid-template-columns: 1fr;
   }
 
-  .profileConnectButton {
+  .profileActionButton {
     width: 100%;
   }
 
