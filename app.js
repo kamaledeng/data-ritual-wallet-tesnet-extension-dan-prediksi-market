@@ -146,15 +146,15 @@ function updateWalletStatus() {
   const networkText = chainLabel(chainId);
   $("walletBox").classList.toggle("connected", connected);
   $("walletStatus").textContent = connected ? shortAddress(account) : "Not connected";
-  $("walletButtonText").textContent = connected ? "Profile" : "Connect Wallet";
-  $("walletButtonMeta").textContent = connected ? shortAddress(account) : "Ritual testnet";
+  $("walletButtonText").textContent = connected ? shortAddress(account) : "Connect Wallet";
+  $("walletButtonMeta").textContent = connected ? networkText : "Ritual testnet";
   $("walletAddressText").textContent = connected ? account : "Not connected";
   $("chainText").textContent = networkText;
   $("networkBadgeText").textContent = networkText;
   $("portfolioWallet").textContent = connected ? shortAddress(account) : "Not connected";
   $("profileAddressText").textContent = connected ? account : "Connect wallet first";
   $("profileNetworkText").textContent = connected ? networkText : "Ritual Testnet";
-  $("profileConnectButton").textContent = connected ? "Open Wallet Menu" : "Connect Wallet";
+  $("profileConnectButton").textContent = connected ? shortAddress(account) : "Connect Wallet";
   $("walletMenu").classList.add("hidden");
   if (!connected) {
     $("profileBalanceText").textContent = "-";

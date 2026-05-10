@@ -95,26 +95,26 @@
         </div>
       </section>
 
-      <section class="marketToolbar">
-        <label class="field compact">
-          Search coin
-          <input id="searchInput" autocomplete="off" placeholder="BTC, ETH, SOL..." />
-        </label>
-        <label class="field compact">
-          Market set
-          <select id="coinSet">
-            <option value="top">Top 50</option>
-            <option value="defi">DeFi</option>
-            <option value="ai">AI</option>
-            <option value="meme">Meme</option>
-            <option value="layer1">Layer 1</option>
-          </select>
-        </label>
-        <button id="refreshButton" class="ghostButton" type="button">Refresh</button>
-        <p id="marketStatus" class="toolbarStatus">Loading live markets...</p>
-      </section>
-
       <section id="marketsView" class="arenaView">
+        <section class="marketToolbar">
+          <label class="field compact">
+            Search coin
+            <input id="searchInput" autocomplete="off" placeholder="BTC, ETH, SOL..." />
+          </label>
+          <label class="field compact">
+            Market set
+            <select id="coinSet">
+              <option value="top">Top 50</option>
+              <option value="defi">DeFi</option>
+              <option value="ai">AI</option>
+              <option value="meme">Meme</option>
+              <option value="layer1">Layer 1</option>
+            </select>
+          </label>
+          <button id="refreshButton" class="ghostButton toolbarButton" type="button">Refresh</button>
+          <p id="marketStatus" class="toolbarStatus">Loading live markets...</p>
+        </section>
+
         <section class="layout">
           <div class="panel marketsPanel">
             <div class="sectionHeader">
