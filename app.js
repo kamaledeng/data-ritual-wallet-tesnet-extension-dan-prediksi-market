@@ -330,14 +330,6 @@ function closeAccountModal() {
   $("accountModal").classList.add("hidden");
 }
 
-function openConnectVerifyModal() {
-  $("connectVerifyModal").classList.remove("hidden");
-}
-
-function closeConnectVerifyModal() {
-  $("connectVerifyModal").classList.add("hidden");
-}
-
 function openNetworkModal() {
   $("networkModal").classList.remove("hidden");
 }
@@ -348,7 +340,6 @@ function closeNetworkModal() {
 
 function closeAllModals() {
   closeAccountModal();
-  closeConnectVerifyModal();
   closeNetworkModal();
 }
 
@@ -433,22 +424,13 @@ $("connectButton").addEventListener("click", async () => {
     openAccountModal();
     return;
   }
-  openConnectVerifyModal();
+  await connectWallet().catch((error) => setStatus(error.message, true));
 });
 $("closeAccountModal").addEventListener("click", closeAccountModal);
 $("modalDisconnectButton").addEventListener("click", disconnectWallet);
 $("copyAddressButton").addEventListener("click", () => copyAddress().catch((error) => setStatus(error.message, true)));
 $("accountModal").addEventListener("click", (event) => {
   if (event.target === $("accountModal")) closeAccountModal();
-});
-$("closeConnectVerifyModal").addEventListener("click", closeConnectVerifyModal);
-$("cancelConnectButton").addEventListener("click", closeConnectVerifyModal);
-$("confirmConnectButton").addEventListener("click", async () => {
-  closeConnectVerifyModal();
-  await connectWallet().catch((error) => setStatus(error.message, true));
-});
-$("connectVerifyModal").addEventListener("click", (event) => {
-  if (event.target === $("connectVerifyModal")) closeConnectVerifyModal();
 });
 $("networkBadge").addEventListener("click", openNetworkModal);
 $("closeNetworkModal").addEventListener("click", closeNetworkModal);

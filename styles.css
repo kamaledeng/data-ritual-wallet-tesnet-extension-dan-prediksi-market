@@ -376,10 +376,6 @@ h2 {
   text-align: center;
 }
 
-.compactModal {
-  width: min(420px, 100%);
-}
-
 .networkModal {
   width: min(362px, 100%);
   padding: 24px 18px 18px;
