@@ -262,9 +262,27 @@ h2 {
   align-items: center;
   gap: 10px;
   min-height: 42px;
-  padding: 0 18px;
+  padding: 7px 18px;
   box-shadow: 0 12px 32px rgba(140, 227, 123, 0.18);
   white-space: nowrap;
+}
+
+.walletButton span:last-child {
+  display: grid;
+  gap: 1px;
+  text-align: left;
+}
+
+.walletButton strong,
+.walletButton small {
+  display: block;
+  line-height: 1.05;
+}
+
+.walletButton small {
+  color: rgba(4, 16, 11, 0.72);
+  font-size: 0.72rem;
+  font-weight: 900;
 }
 
 .walletDot {
@@ -284,7 +302,7 @@ h2 {
   right: 0;
   top: calc(100% + 10px);
   z-index: 20;
-  width: min(330px, calc(100vw - 48px));
+  width: min(390px, calc(100vw - 48px));
   padding: 16px;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -292,10 +310,64 @@ h2 {
   box-shadow: var(--shadow);
 }
 
+.profileMenuHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .walletMenu strong,
 .walletMenu span {
   display: block;
   overflow-wrap: anywhere;
+}
+
+.miniButton {
+  min-height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 10px;
+  background: rgba(140, 227, 123, 0.1);
+  color: var(--green);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.profileStats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.profileStats div {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(140, 227, 123, 0.08);
+}
+
+.profileStats span {
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.profileStats strong {
+  margin-top: 4px;
+  color: var(--text);
+  font-size: 0.98rem;
+}
+
+.profileHint {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
 }
 
 .dangerButton {
@@ -881,6 +953,10 @@ body.lightTheme .statCard {
   .walletMenu {
     left: 0;
     right: auto;
+  }
+
+  .profileStats {
+    grid-template-columns: 1fr;
   }
 
   .toolbarStatus {

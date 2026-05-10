@@ -16,6 +16,7 @@ let chainId = null;
 let markets = [];
 let selectedMarket = null;
 let selectedChoice = "YES";
+let profileRequestId = 0;
 
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, (char) => ({
@@ -59,6 +60,23 @@ function formatUsd(value) {
 function formatCompact(value) {
   if (value == null) return "-";
   return new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 }).format(value);
+}
+
+function formatRitualBalance(hexValue) {
+  if (!hexValue) return "0 RITUAL";
+  const wei = BigInt(hexValue);
+  const whole = wei / 10n ** 18n;
+  const fraction = wei % (10n ** 18n);
+  const fractionText = fraction.toString().padStart(18, "0").slice(0, 4).replace(/0+$/, "");
+  return `${whole.toLocaleString()}${fractionText ? `.${fractionText}` : ""} RITUAL`;
+}
+
+function scoreFromProfile(balanceHex, txCount, signedCount) {
+  const wholeBalance = balanceHex ? Number(BigInt(balanceHex) / 10n ** 18n) : 0;
+  const balancePoints = Math.min(500, Math.floor(wholeBalance * 8));
+  const txPoints = Math.min(3000, Number(txCount || 0) * 35);
+  const signedPoints = Math.min(1500, Number(signedCount || 0) * 50);
+  return balancePoints + txPoints + signedPoints;
 }
 
 function formatChange(value) {
@@ -120,11 +138,48 @@ function updateWalletStatus() {
   const connected = Boolean(account);
   $("walletBox").classList.toggle("connected", connected);
   $("walletStatus").textContent = connected ? shortAddress(account) : "Not connected";
-  $("walletButtonText").textContent = connected ? shortAddress(account) : "Connect Wallet";
+  $("walletButtonText").textContent = connected ? "Profile" : "Connect Wallet";
+  $("walletButtonMeta").textContent = connected ? shortAddress(account) : "Ritual testnet";
   $("walletAddressText").textContent = connected ? account : "Not connected";
   $("chainText").textContent = chainId ? `Chain ${chainId}` : "Ritual testnet";
   $("portfolioWallet").textContent = connected ? shortAddress(account) : "Not connected";
   $("walletMenu").classList.add("hidden");
+  if (!connected) {
+    $("profileBalanceText").textContent = "-";
+    $("profileTxText").textContent = "-";
+    $("profileScoreText").textContent = "-";
+    $("profileHint").textContent = "Connect wallet to load Ritual testnet stats.";
+  }
+}
+
+async function refreshWalletProfile() {
+  if (!account || !window.ethereum?.request) return;
+  const requestId = ++profileRequestId;
+  $("profileBalanceText").textContent = "...";
+  $("profileTxText").textContent = "...";
+  $("profileScoreText").textContent = "...";
+  $("profileHint").textContent = "Loading Ritual RPC profile...";
+
+  try {
+    const [balanceHex, txCountHex] = await Promise.all([
+      window.ethereum.request({ method: "eth_getBalance", params: [account, "latest"] }),
+      window.ethereum.request({ method: "eth_getTransactionCount", params: [account, "latest"] }),
+    ]);
+    if (requestId !== profileRequestId) return;
+
+    const txCount = Number(BigInt(txCountHex || "0x0"));
+    const signedCount = getHistory().length;
+    $("profileBalanceText").textContent = formatRitualBalance(balanceHex);
+    $("profileTxText").textContent = txCount.toLocaleString();
+    $("profileScoreText").textContent = scoreFromProfile(balanceHex, txCount, signedCount).toLocaleString();
+    $("profileHint").textContent = `Real Ritual RPC stats. Score also includes ${signedCount} local signed prediction${signedCount === 1 ? "" : "s"}.`;
+  } catch (error) {
+    if (requestId !== profileRequestId) return;
+    $("profileBalanceText").textContent = "-";
+    $("profileTxText").textContent = "-";
+    $("profileScoreText").textContent = "-";
+    $("profileHint").textContent = error.message || "Could not load Ritual RPC profile.";
+  }
 }
 
 function filteredMarkets() {
@@ -236,6 +291,7 @@ async function connectWallet() {
   chainId = await window.ethereum.request({ method: "eth_chainId" }).catch(() => null);
   localStorage.removeItem(DISCONNECT_KEY);
   updateWalletStatus();
+  await refreshWalletProfile();
   setStatus(account ? "Wallet connected." : "No account returned.", !account);
 }
 
@@ -320,11 +376,13 @@ document.querySelectorAll(".arenaTab").forEach((button) => {
 $("connectButton").addEventListener("click", async () => {
   if (account) {
     $("walletMenu").classList.toggle("hidden");
+    if (!$("walletMenu").classList.contains("hidden")) refreshWalletProfile();
     return;
   }
   await connectWallet().catch((error) => setStatus(error.message, true));
 });
 $("disconnectButton").addEventListener("click", disconnectWallet);
+$("refreshProfileButton").addEventListener("click", refreshWalletProfile);
 $("themeButton").addEventListener("click", toggleTheme);
 $("refreshButton").addEventListener("click", () => loadMarkets().catch((error) => {
   $("marketStatus").textContent = error.message;
@@ -346,6 +404,7 @@ if (window.ethereum?.request && localStorage.getItem(DISCONNECT_KEY) !== "1") {
     account = accounts[0] || null;
     if (account) chainId = await window.ethereum.request({ method: "eth_chainId" }).catch(() => null);
     updateWalletStatus();
+    if (account) refreshWalletProfile();
   }).catch(() => {});
 }
 
