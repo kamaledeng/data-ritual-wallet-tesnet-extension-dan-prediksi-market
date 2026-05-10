@@ -387,6 +387,11 @@ body.lightTheme .panel {
   margin-bottom: 20px;
 }
 
+.topArenaTabs {
+  margin-top: -8px;
+  margin-bottom: 18px;
+}
+
 .arenaTab {
   min-height: 42px;
   padding: 0 18px;
