@@ -619,6 +619,10 @@ body.lightTheme .panel {
 }
 
 .arenaTab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
   min-height: 40px;
   padding: 0 18px;
   border: 1px solid var(--line);
@@ -627,6 +631,73 @@ body.lightTheme .panel {
   color: var(--muted);
   cursor: pointer;
   font-weight: 900;
+}
+
+.utilityTab {
+  padding-inline: 14px;
+}
+
+.tabIcon,
+.productSoonIcon {
+  position: relative;
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  color: var(--muted);
+}
+
+.poolsIcon {
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+  box-shadow: 0 -5px 0 -2px currentColor, 0 5px 0 -2px currentColor;
+}
+
+.poolsIcon::before,
+.poolsIcon::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  height: 1.5px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.poolsIcon::before {
+  top: 4px;
+}
+
+.poolsIcon::after {
+  bottom: 4px;
+}
+
+.swapIcon::before,
+.swapIcon::after {
+  content: "";
+  position: absolute;
+  left: 1px;
+  right: 1px;
+  height: 1.5px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.swapIcon::before {
+  top: 4px;
+}
+
+.swapIcon::after {
+  bottom: 4px;
+}
+
+.swapIcon {
+  background:
+    linear-gradient(135deg, transparent 48%, currentColor 49% 55%, transparent 56%) 7px 2px / 7px 7px no-repeat,
+    linear-gradient(315deg, transparent 48%, currentColor 49% 55%, transparent 56%) 1px 7px / 7px 7px no-repeat;
+}
+
+.arenaTab.active .tabIcon {
+  color: var(--green);
 }
 
 .arenaTab.active {
@@ -931,6 +1002,108 @@ body.lightTheme .field select {
   color: var(--muted);
   font-weight: 900;
   background: rgba(5, 15, 11, 0.42);
+}
+
+.productSoonPanel {
+  position: relative;
+  min-height: 430px;
+  overflow: hidden;
+  padding: 34px;
+  display: grid;
+  align-content: center;
+  gap: 20px;
+  background:
+    linear-gradient(135deg, rgba(140, 227, 123, 0.14), transparent 36%),
+    radial-gradient(circle at 86% 16%, rgba(6, 173, 114, 0.22), transparent 34%),
+    var(--panel);
+}
+
+.productSoonPanel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(188, 225, 204, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(188, 225, 204, 0.06) 1px, transparent 1px);
+  background-size: 22px 22px;
+  opacity: 0.42;
+}
+
+.productSoonPanel > * {
+  position: relative;
+}
+
+.productSoonHeader {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.productSoonHeader h2 {
+  max-width: 720px;
+  font-size: clamp(2rem, 5vw, 4.7rem);
+  line-height: 0.98;
+}
+
+.productSoonIcon {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  flex: 0 0 auto;
+  color: var(--green);
+}
+
+.productSoonPanel p {
+  max-width: 720px;
+  color: var(--muted);
+  font-size: 1.02rem;
+  line-height: 1.7;
+}
+
+.productSoonGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.productSoonGrid article {
+  min-height: 132px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(3, 18, 12, 0.56);
+}
+
+.productSoonGrid span,
+.productSoonGrid small {
+  display: block;
+  color: var(--muted);
+  font-weight: 900;
+}
+
+.productSoonGrid span {
+  text-transform: uppercase;
+  font-size: 0.72rem;
+}
+
+.productSoonGrid strong {
+  display: block;
+  margin: 18px 0 6px;
+  color: var(--text);
+  font-size: 1.45rem;
+}
+
+.swapSoonPanel {
+  background:
+    linear-gradient(135deg, rgba(140, 227, 123, 0.12), transparent 38%),
+    radial-gradient(circle at 82% 20%, rgba(120, 178, 255, 0.16), transparent 36%),
+    var(--panel);
+}
+
+body.lightTheme .productSoonGrid article {
+  background: rgba(255, 255, 255, 0.72);
 }
 
 body.lightTheme .comingSoonGrid span,

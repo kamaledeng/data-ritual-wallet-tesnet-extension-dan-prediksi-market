@@ -18,6 +18,14 @@
 
           <nav class="arenaTabs topArenaTabs" aria-label="Arena sections">
             <button class="arenaTab active" type="button" data-arena-tab="marketsView">Markets</button>
+            <button class="arenaTab utilityTab" type="button" data-arena-tab="poolsView">
+              <span class="tabIcon poolsIcon" aria-hidden="true"></span>
+              Pools
+            </button>
+            <button class="arenaTab utilityTab" type="button" data-arena-tab="swapView">
+              <span class="tabIcon swapIcon" aria-hidden="true"></span>
+              Swap
+            </button>
             <button class="arenaTab" type="button" data-arena-tab="portfolioView">Portfolio</button>
             <button class="arenaTab" type="button" data-arena-tab="leaderboardView">Leaderboard</button>
             <button class="arenaTab" type="button" data-arena-tab="profileView">Profile</button>
@@ -176,6 +184,72 @@
             <button id="signButton" class="primaryButton" type="button">Sign Prediction</button>
             <p id="statusText" class="statusText" role="status"></p>
           </aside>
+        </section>
+      </section>
+
+      <section id="poolsView" class="arenaView hidden">
+        <section class="panel productSoonPanel poolsSoonPanel">
+          <div class="productSoonHeader">
+            <span class="productSoonIcon poolsIcon" aria-hidden="true"></span>
+            <div>
+              <p class="eyebrow">Pools</p>
+              <h2>Liquidity pools are coming soon.</h2>
+            </div>
+          </div>
+          <p>
+            Deposit testnet liquidity, track pool share, and route prediction liquidity through
+            Ritual markets once the pool engine is ready.
+          </p>
+          <div class="productSoonGrid">
+            <article>
+              <span>Pool share</span>
+              <strong>Pending</strong>
+              <small>LP positions and rewards</small>
+            </article>
+            <article>
+              <span>Market depth</span>
+              <strong>Queued</strong>
+              <small>Liquidity for YES / NO books</small>
+            </article>
+            <article>
+              <span>Rewards</span>
+              <strong>Season 01</strong>
+              <small>Testnet activity scoring</small>
+            </article>
+          </div>
+        </section>
+      </section>
+
+      <section id="swapView" class="arenaView hidden">
+        <section class="panel productSoonPanel swapSoonPanel">
+          <div class="productSoonHeader">
+            <span class="productSoonIcon swapIcon" aria-hidden="true"></span>
+            <div>
+              <p class="eyebrow">Swap</p>
+              <h2>Fast testnet swaps are coming soon.</h2>
+            </div>
+          </div>
+          <p>
+            Swap between supported testnet assets, preview routes, and prepare collateral
+            before entering prediction markets.
+          </p>
+          <div class="productSoonGrid">
+            <article>
+              <span>Route preview</span>
+              <strong>Building</strong>
+              <small>Best path and price impact</small>
+            </article>
+            <article>
+              <span>Slippage guard</span>
+              <strong>Planned</strong>
+              <small>Trade safety controls</small>
+            </article>
+            <article>
+              <span>Asset list</span>
+              <strong>Ritual</strong>
+              <small>Curated testnet tokens</small>
+            </article>
+          </div>
         </section>
       </section>
 
