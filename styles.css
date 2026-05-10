@@ -176,11 +176,23 @@ body.lightTheme .themeIcon {
   background: var(--green-strong);
   color: #02100b;
   font-weight: 900;
+  overflow: hidden;
 }
 
 .logoMark.large {
   width: 48px;
   height: 48px;
+}
+
+.logoImageMark {
+  background: #087b4d;
+}
+
+.logoImageMark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .eyebrow,
