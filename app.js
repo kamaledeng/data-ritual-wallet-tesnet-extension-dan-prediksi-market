@@ -147,13 +147,14 @@ function updateWalletStatus() {
   $("walletBox").classList.toggle("connected", connected);
   $("walletStatus").textContent = connected ? shortAddress(account) : "Not connected";
   $("walletButtonText").textContent = connected ? shortAddress(account) : "Connect Wallet";
-  $("connectButton").disabled = connected;
-  $("navDisconnectButton").classList.toggle("hidden", !connected);
   $("networkBadgeText").textContent = networkText;
   $("portfolioWallet").textContent = connected ? shortAddress(account) : "Not connected";
   $("profileAddressText").textContent = connected ? account : "Connect wallet first";
   $("profileNetworkText").textContent = connected ? networkText : "Ritual Testnet";
+  $("modalAddressText").textContent = connected ? shortAddress(account) : "0x000...0000";
   if (!connected) {
+    $("accountModal").classList.add("hidden");
+    $("modalBalanceText").textContent = "-";
     $("profilePageBalanceText").textContent = "-";
     $("profilePageTxText").textContent = "-";
     $("profilePageScoreText").textContent = "-";
@@ -184,6 +185,7 @@ async function refreshWalletProfile() {
     const scoreText = scoreFromProfile(balanceHex, txCount, signedCount).toLocaleString();
     const hintText = `Real Ritual RPC stats. Score also includes ${signedCount} local signed prediction${signedCount === 1 ? "" : "s"}.`;
     $("profilePageBalanceText").textContent = balanceText;
+    $("modalBalanceText").textContent = balanceText;
     $("profilePageTxText").textContent = txText;
     $("profilePageScoreText").textContent = scoreText;
     $("profilePageSignedText").textContent = signedCount.toLocaleString();
@@ -319,6 +321,21 @@ function disconnectWallet() {
   setStatus("Wallet disconnected on this dApp. Clear connected sites in the extension to revoke permission.");
 }
 
+function openAccountModal() {
+  if (!account) return;
+  $("accountModal").classList.remove("hidden");
+}
+
+function closeAccountModal() {
+  $("accountModal").classList.add("hidden");
+}
+
+async function copyAddress() {
+  if (!account) return;
+  await navigator.clipboard.writeText(account);
+  setStatus("Wallet address copied.");
+}
+
 function buildOrder() {
   if (!selectedMarket) throw new Error("Choose a market first.");
   if (!account) throw new Error("Connect wallet first.");
@@ -390,10 +407,21 @@ document.querySelectorAll(".arenaTab").forEach((button) => {
 });
 
 $("connectButton").addEventListener("click", async () => {
-  if (account) return;
+  if (account) {
+    openAccountModal();
+    return;
+  }
   await connectWallet().catch((error) => setStatus(error.message, true));
 });
-$("navDisconnectButton").addEventListener("click", disconnectWallet);
+$("closeAccountModal").addEventListener("click", closeAccountModal);
+$("modalDisconnectButton").addEventListener("click", disconnectWallet);
+$("copyAddressButton").addEventListener("click", () => copyAddress().catch((error) => setStatus(error.message, true)));
+$("accountModal").addEventListener("click", (event) => {
+  if (event.target === $("accountModal")) closeAccountModal();
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") closeAccountModal();
+});
 $("profileRefreshButton").addEventListener("click", refreshWalletProfile);
 $("themeButton").addEventListener("click", toggleTheme);
 $("refreshButton").addEventListener("click", () => loadMarkets().catch((error) => {

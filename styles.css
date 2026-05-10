@@ -335,28 +335,6 @@ h2 {
   box-shadow: 0 0 0 5px rgba(6, 173, 114, 0.18);
 }
 
-.navDisconnectButton {
-  min-height: 42px;
-  border: 1px solid rgba(255, 111, 125, 0.42);
-  border-radius: 8px;
-  padding: 0 12px;
-  background: rgba(255, 111, 125, 0.1);
-  color: #ffd5da;
-  cursor: pointer;
-  font-family: inherit;
-  font-weight: 900;
-}
-
-.navDisconnectButton:hover,
-.navDisconnectButton:focus-visible {
-  border-color: rgba(255, 111, 125, 0.72);
-  background: rgba(255, 111, 125, 0.16);
-}
-
-.walletButton:disabled {
-  cursor: default;
-}
-
 .miniButton {
   min-height: 32px;
   border: 1px solid var(--line);
@@ -367,6 +345,102 @@ h2 {
   cursor: pointer;
   font-size: 0.78rem;
   font-weight: 900;
+}
+
+.accountModalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(1, 7, 5, 0.58);
+}
+
+.accountModal {
+  position: relative;
+  width: min(362px, 100%);
+  padding: 26px 20px 18px;
+  border: 1px solid rgba(188, 225, 204, 0.08);
+  border-radius: 18px;
+  background: #24272c;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.42);
+  text-align: center;
+}
+
+.accountModalClose {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.09);
+  color: rgba(255, 255, 255, 0.68);
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.accountModalAvatar {
+  display: grid;
+  place-items: center;
+  width: 78px;
+  height: 78px;
+  margin: 0 auto 16px;
+  border-radius: 999px;
+  background: #77ca66;
+}
+
+.accountModalAvatar img {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+}
+
+.accountModal strong,
+.accountModal span {
+  display: block;
+}
+
+.accountModal strong {
+  color: #fff;
+  font-size: 1.12rem;
+}
+
+.accountModal > span {
+  margin-top: 4px;
+  color: rgba(255, 255, 255, 0.62);
+  font-weight: 800;
+}
+
+.accountModalActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.accountModalActions button {
+  min-height: 54px;
+  border: 0;
+  border-radius: 8px;
+  background: #3c4048;
+  color: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 900;
+}
+
+.accountModalActions button:hover,
+.accountModalActions button:focus-visible {
+  background: #4a4f59;
+}
+
+.accountModalActions span {
+  margin-bottom: 2px;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .profileHint {
@@ -1053,10 +1127,6 @@ body.lightTheme .profileMetricCard {
 
   .walletBox {
     align-items: stretch;
-  }
-
-  .navDisconnectButton {
-    flex: 1;
   }
 
   .profileHeroCard,

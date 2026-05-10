@@ -44,10 +44,30 @@
                 <strong id="walletButtonText">Connect Wallet</strong>
               </span>
             </button>
-            <button id="navDisconnectButton" class="navDisconnectButton hidden" type="button">Disconnect</button>
           </div>
         </div>
       </nav>
+
+      <div id="accountModal" class="accountModalOverlay hidden" role="dialog" aria-modal="true" aria-labelledby="modalAddressText">
+        <section class="accountModal">
+          <button id="closeAccountModal" class="accountModalClose" type="button" aria-label="Close account menu">x</button>
+          <div class="accountModalAvatar" aria-hidden="true">
+            <img src="assets/ritual-logo-green.png" alt="" />
+          </div>
+          <strong id="modalAddressText">0x000...0000</strong>
+          <span id="modalBalanceText">-</span>
+          <div class="accountModalActions">
+            <button id="copyAddressButton" type="button">
+              <span aria-hidden="true">[]</span>
+              Copy Address
+            </button>
+            <button id="modalDisconnectButton" type="button">
+              <span aria-hidden="true">-></span>
+              Disconnect
+            </button>
+          </div>
+        </section>
+      </div>
 
       <section id="marketsView" class="arenaView">
         <section class="hero">
