@@ -330,6 +330,28 @@ function closeAccountModal() {
   $("accountModal").classList.add("hidden");
 }
 
+function openConnectVerifyModal() {
+  $("connectVerifyModal").classList.remove("hidden");
+}
+
+function closeConnectVerifyModal() {
+  $("connectVerifyModal").classList.add("hidden");
+}
+
+function openNetworkModal() {
+  $("networkModal").classList.remove("hidden");
+}
+
+function closeNetworkModal() {
+  $("networkModal").classList.add("hidden");
+}
+
+function closeAllModals() {
+  closeAccountModal();
+  closeConnectVerifyModal();
+  closeNetworkModal();
+}
+
 async function copyAddress() {
   if (!account) return;
   await navigator.clipboard.writeText(account);
@@ -411,7 +433,7 @@ $("connectButton").addEventListener("click", async () => {
     openAccountModal();
     return;
   }
-  await connectWallet().catch((error) => setStatus(error.message, true));
+  openConnectVerifyModal();
 });
 $("closeAccountModal").addEventListener("click", closeAccountModal);
 $("modalDisconnectButton").addEventListener("click", disconnectWallet);
@@ -419,8 +441,23 @@ $("copyAddressButton").addEventListener("click", () => copyAddress().catch((erro
 $("accountModal").addEventListener("click", (event) => {
   if (event.target === $("accountModal")) closeAccountModal();
 });
+$("closeConnectVerifyModal").addEventListener("click", closeConnectVerifyModal);
+$("cancelConnectButton").addEventListener("click", closeConnectVerifyModal);
+$("confirmConnectButton").addEventListener("click", async () => {
+  closeConnectVerifyModal();
+  await connectWallet().catch((error) => setStatus(error.message, true));
+});
+$("connectVerifyModal").addEventListener("click", (event) => {
+  if (event.target === $("connectVerifyModal")) closeConnectVerifyModal();
+});
+$("networkBadge").addEventListener("click", openNetworkModal);
+$("closeNetworkModal").addEventListener("click", closeNetworkModal);
+$("ritualNetworkOption").addEventListener("click", closeNetworkModal);
+$("networkModal").addEventListener("click", (event) => {
+  if (event.target === $("networkModal")) closeNetworkModal();
+});
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape") closeAccountModal();
+  if (event.key === "Escape") closeAllModals();
 });
 $("profileRefreshButton").addEventListener("click", refreshWalletProfile);
 $("themeButton").addEventListener("click", toggleTheme);

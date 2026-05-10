@@ -172,8 +172,16 @@ a {
   border-radius: 8px;
   background: rgba(15, 27, 22, 0.78);
   color: var(--text);
+  cursor: pointer;
+  font-family: inherit;
   font-weight: 900;
   white-space: nowrap;
+}
+
+.networkBadge:hover,
+.networkBadge:focus-visible {
+  border-color: rgba(140, 227, 123, 0.56);
+  background: rgba(140, 227, 123, 0.1);
 }
 
 .networkIcon {
@@ -368,6 +376,21 @@ h2 {
   text-align: center;
 }
 
+.compactModal {
+  width: min(420px, 100%);
+}
+
+.networkModal {
+  width: min(362px, 100%);
+  padding: 24px 18px 18px;
+  text-align: left;
+}
+
+.networkModal > strong {
+  margin: 0 44px 18px 6px;
+  font-size: 1.08rem;
+}
+
 .accountModalClose {
   position: absolute;
   top: 16px;
@@ -441,6 +464,50 @@ h2 {
 .accountModalActions span {
   margin-bottom: 2px;
   color: rgba(255, 255, 255, 0.8);
+}
+
+.networkOption {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid rgba(140, 227, 123, 0.14);
+  border-radius: 8px;
+  padding: 0 12px;
+  background: rgba(113, 171, 159, 0.86);
+  color: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 900;
+  text-align: left;
+}
+
+.networkOptionIcon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.36);
+}
+
+.networkOption small {
+  color: rgba(255, 255, 255, 0.92);
+  font-weight: 900;
+}
+
+.networkOption i {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--green-strong);
+}
+
+.networkOption:hover,
+.networkOption:focus-visible {
+  background: rgba(126, 190, 178, 0.96);
 }
 
 .profileHint {
