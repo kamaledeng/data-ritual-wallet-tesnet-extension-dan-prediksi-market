@@ -10,10 +10,19 @@
   <body>
     <main class="app">
       <nav class="ritualNav" aria-label="Ritual links">
-        <a class="ritualBrand" href="https://ritual.net" target="_blank" rel="noreferrer">
-          <span class="logoMark logoImageMark"><img src="assets/ritual-logo-green.png" alt="" /></span>
-          <span>Ritual</span>
-        </a>
+        <div class="ritualNavLeft">
+          <a class="ritualBrand" href="https://ritual.net" target="_blank" rel="noreferrer">
+            <span class="logoMark logoImageMark"><img src="assets/ritual-logo-green.png" alt="" /></span>
+            <span>Ritual</span>
+          </a>
+
+          <nav class="arenaTabs topArenaTabs" aria-label="Arena sections">
+            <button class="arenaTab active" type="button" data-arena-tab="marketsView">Markets</button>
+            <button class="arenaTab" type="button" data-arena-tab="portfolioView">Portfolio</button>
+            <button class="arenaTab" type="button" data-arena-tab="leaderboardView">Leaderboard</button>
+          </nav>
+        </div>
+
         <div class="ritualLinks">
           <a href="https://explorer.ritualfoundation.org" target="_blank" rel="noreferrer">Explorer</a>
           <a href="https://docs.ritualfoundation.org/" target="_blank" rel="noreferrer">Docs</a>
@@ -23,42 +32,25 @@
             <span class="themeIcon" aria-hidden="true"></span>
             <span id="themeButtonText">Dark</span>
           </button>
-        </div>
-      </nav>
-
-      <header class="topbar">
-        <div class="brand">
-          <span class="logoMark large logoImageMark"><img src="assets/ritual-logo-green.png" alt="" /></span>
-          <div>
-            <p class="eyebrow">Ritual Testnet dApp</p>
-            <h1>Prediction Arena</h1>
+          <div id="walletBox" class="walletBox">
+            <button id="connectButton" class="walletButton" type="button">
+              <span id="walletDot" class="walletDot"></span>
+              <span id="walletButtonText">Connect Wallet</span>
+            </button>
+            <div id="walletMenu" class="walletMenu hidden">
+              <p class="label">Connected wallet</p>
+              <strong id="walletAddressText">Not connected</strong>
+              <span id="chainText" class="muted">Ritual testnet</span>
+              <button id="disconnectButton" class="dangerButton" type="button">Disconnect</button>
+            </div>
           </div>
         </div>
-
-        <div id="walletBox" class="walletBox">
-          <button id="connectButton" class="walletButton" type="button">
-            <span id="walletDot" class="walletDot"></span>
-            <span id="walletButtonText">Connect Wallet</span>
-          </button>
-          <div id="walletMenu" class="walletMenu hidden">
-            <p class="label">Connected wallet</p>
-            <strong id="walletAddressText">Not connected</strong>
-            <span id="chainText" class="muted">Ritual testnet</span>
-            <button id="disconnectButton" class="dangerButton" type="button">Disconnect</button>
-          </div>
-        </div>
-      </header>
-
-      <nav class="arenaTabs topArenaTabs" aria-label="Arena sections">
-        <button class="arenaTab active" type="button" data-arena-tab="marketsView">Markets</button>
-        <button class="arenaTab" type="button" data-arena-tab="portfolioView">Portfolio</button>
-        <button class="arenaTab" type="button" data-arena-tab="leaderboardView">Leaderboard</button>
       </nav>
 
       <section class="hero">
         <div class="heroCopy">
           <p class="eyebrow">Live crypto markets</p>
-          <h2>Predict market direction with your Ritual wallet.</h2>
+          <h2>Market direction, signed with Ritual.</h2>
           <p>
             Live prices come from CoinGecko. Choose a market, pick YES or NO, then
             sign an off-chain prediction order using the Ritual wallet extension.
