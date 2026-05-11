@@ -1,33 +1,6 @@
-<<<<<<< HEAD
-const seedRows = [
-  { address: "0x8a9f000000000000000000000000000000007c1", name: "Ritual Alpha", xp: 940, streak: 18, actions: 34, lastTask: "Daily Claim", updatedAt: new Date(Date.now() - 2 * 60 * 1000).toISOString() },
-  { address: "0x4e2b0000000000000000000000000000000091b", name: "Ritual Runner", xp: 710, streak: 12, actions: 22, lastTask: "Ritual Check-in", updatedAt: new Date(Date.now() - 60 * 60 * 1000).toISOString() },
-  { address: "0x71dd000000000000000000000000000000003af", name: "Prediction Scout", xp: 260, streak: 5, actions: 8, lastTask: "Prediction Arena", updatedAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString() },
-];
-
-const board = globalThis.__ritualLeaderboardBoard ?? new Map();
-globalThis.__ritualLeaderboardBoard = board;
-
-for (const row of seedRows) {
-  if (!board.has(row.address.toLowerCase())) {
-    board.set(row.address.toLowerCase(), row);
-  }
-}
-
-=======
 const runtimeBoard = globalThis.__ritualLeaderboardBoard ?? new Map();
 globalThis.__ritualLeaderboardBoard = runtimeBoard;
 
-let kv = null;
-try {
-  ({ kv } = require("@vercel/kv"));
-} catch {
-  kv = null;
-}
-
-const KV_KEY = "ritual:leaderboard:v1";
-
->>>>>>> e80faac (Add real-claim leaderboard API with persistence fallback)
 function sendJson(response, status, payload) {
   response.statusCode = status;
   response.setHeader("Content-Type", "application/json");
@@ -37,8 +10,6 @@ function sendJson(response, status, payload) {
   response.end(JSON.stringify(payload));
 }
 
-<<<<<<< HEAD
-=======
 function validAddress(address) {
   return /^0x[a-f0-9]{40}$/.test(address);
 }
@@ -53,7 +24,6 @@ function toNumber(value, fallback = 0) {
   return Number.isFinite(num) ? num : fallback;
 }
 
->>>>>>> e80faac (Add real-claim leaderboard API with persistence fallback)
 function parseBody(request) {
   if (request.body && typeof request.body === "object") return Promise.resolve(request.body);
   return new Promise((resolve, reject) => {
@@ -73,24 +43,13 @@ function parseBody(request) {
   });
 }
 
-<<<<<<< HEAD
-function rows() {
-  return Array.from(board.values())
-    .sort((a, b) => Number(b.xp || 0) - Number(a.xp || 0))
-=======
 async function readBoard() {
-  if (!kv) return new Map(runtimeBoard);
-  const rows = (await kv.get(KV_KEY)) ?? [];
-  return new Map(rows.map((row) => [String(row.address).toLowerCase(), row]));
+  return new Map(runtimeBoard);
 }
 
 async function writeBoard(board) {
-  if (!kv) {
-    runtimeBoard.clear();
-    for (const [key, value] of board) runtimeBoard.set(key, value);
-    return;
-  }
-  await kv.set(KV_KEY, Array.from(board.values()));
+  runtimeBoard.clear();
+  for (const [key, value] of board) runtimeBoard.set(key, value);
 }
 
 function rankedRows(board) {
@@ -104,66 +63,117 @@ function rankedRows(board) {
       if (streakDelta) return streakDelta;
       return String(b.updatedAt || "").localeCompare(String(a.updatedAt || ""));
     })
->>>>>>> e80faac (Add real-claim leaderboard API with persistence fallback)
     .slice(0, 100)
     .map((row, index) => ({ rank: index + 1, ...row }));
 }
 
+function supabaseConfig() {
+  const url = [
+    process.env.SUPABASE_URL,
+    process.env.STORAGE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_STORAGE_URL,
+  ].find(Boolean);
+
+  const key = [
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
+    process.env.SUPABASE_ANON_KEY,
+    process.env.SUPABASE_PUBLISHABLE_KEY,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    process.env.STORAGE_ANON_KEY,
+    process.env.STORAGE_PUBLISHABLE_KEY,
+    process.env.NEXT_PUBLIC_STORAGE_ANON_KEY,
+    process.env.NEXT_PUBLIC_STORAGE_PUBLISHABLE_KEY,
+  ].find(Boolean);
+
+  if (!url || !key) return null;
+  return { url: String(url).replace(/\/+$/, ""), key };
+}
+
+async function supabaseRequest(config, path, init = {}) {
+  const response = await fetch(`${config.url}/rest/v1/${path}`, {
+    ...init,
+    headers: {
+      apikey: config.key,
+      Authorization: `Bearer ${config.key}`,
+      "Content-Type": "application/json",
+      ...(init.headers || {}),
+    },
+  });
+
+  if (!response.ok) {
+    const text = await response.text().catch(() => "");
+    throw new Error(`Supabase error ${response.status}${text ? `: ${text}` : ""}`);
+  }
+
+  return response;
+}
+
+async function getSupabaseRows(config) {
+  const response = await supabaseRequest(
+    config,
+    "ritual_leaderboard?select=*&order=xp.desc,dailyClaims.desc,streak.desc,updatedAt.desc&limit=100",
+    { method: "GET" },
+  );
+  const rows = await response.json();
+  return Array.isArray(rows) ? rows.map((row, index) => ({ rank: index + 1, ...row })) : [];
+}
+
+async function getSupabaseRowByAddress(config, address) {
+  const response = await supabaseRequest(
+    config,
+    `ritual_leaderboard?select=*&address=eq.${encodeURIComponent(address)}&limit=1`,
+    { method: "GET" },
+  );
+  const rows = await response.json();
+  return Array.isArray(rows) && rows[0] ? rows[0] : {};
+}
+
+async function upsertSupabaseRow(config, row) {
+  await supabaseRequest(config, "ritual_leaderboard?on_conflict=address", {
+    method: "POST",
+    headers: { Prefer: "resolution=merge-duplicates,return=representation" },
+    body: JSON.stringify([row]),
+  });
+}
+
 module.exports = async function handler(request, response) {
   if (request.method === "OPTIONS") return sendJson(response, 200, { ok: true });
-<<<<<<< HEAD
-  if (request.method === "GET") return sendJson(response, 200, { rows: rows(), updatedAt: new Date().toISOString() });
-  if (request.method !== "POST") return sendJson(response, 405, { error: "Method not allowed" });
-=======
-
-  const board = await readBoard();
+  const supabase = supabaseConfig();
+  const board = !supabase ? await readBoard() : null;
 
   if (request.method === "GET") {
-    return sendJson(response, 200, {
-      rows: rankedRows(board),
-      updatedAt: new Date().toISOString(),
-      storage: kv ? "vercel-kv" : "memory",
-    });
+    try {
+      if (supabase) {
+        return sendJson(response, 200, {
+          rows: await getSupabaseRows(supabase),
+          updatedAt: new Date().toISOString(),
+          storage: "supabase",
+        });
+      }
+      return sendJson(response, 200, {
+        rows: rankedRows(board),
+        updatedAt: new Date().toISOString(),
+        storage: "memory",
+      });
+    } catch (error) {
+      return sendJson(response, 500, { error: error.message || "Could not load leaderboard rows" });
+    }
   }
 
   if (request.method !== "POST") {
     return sendJson(response, 405, { error: "Method not allowed" });
   }
->>>>>>> e80faac (Add real-claim leaderboard API with persistence fallback)
 
   try {
     const body = await parseBody(request);
     const address = String(body.address || "").toLowerCase();
-<<<<<<< HEAD
-    if (!/^0x[a-f0-9]{40}$/.test(address)) {
-      return sendJson(response, 400, { error: "Valid wallet address is required" });
-    }
-
-    const existing = board.get(address) || {};
-    const completed = body.completed && typeof body.completed === "object" ? body.completed : {};
-    const actions = Math.max(
-      Number(existing.actions || 0),
-      Object.keys(completed).length,
-      Number(existing.actions || 0) + 1,
-    );
-    const next = {
-      address,
-      name: String(body.name || existing.name || `${address.slice(0, 6)}...${address.slice(-4)}`).slice(0, 32),
-      xp: Math.max(Number(existing.xp || 0), Number(body.xp || 0)),
-      streak: Math.max(Number(existing.streak || 0), Number(body.streak || 0)),
-      actions,
-      cratBalance: Number(body.cratBalance || existing.cratBalance || 0),
-      lastTask: String(body.task?.title || existing.lastTask || "Ritual task").slice(0, 40),
-      updatedAt: new Date().toISOString(),
-    };
-    board.set(address, next);
-    return sendJson(response, 200, { ok: true, row: next, rows: rows(), updatedAt: new Date().toISOString() });
-=======
     if (!validAddress(address)) return sendJson(response, 400, { error: "Valid wallet address is required" });
 
     const taskId = String(body.task?.id || "");
     const nowIso = new Date().toISOString();
-    const existing = board.get(address) || {};
+    const existing = supabase ? await getSupabaseRowByAddress(supabase, address) : (board.get(address) || {});
 
     // Extension already gates most rituals behind positive CRAT balance.
     // Here we additionally store the latest reported balance for auditing/debug.
@@ -196,17 +206,22 @@ module.exports = async function handler(request, response) {
       source: String(body.source || existing.source || "ritual-wallet-extension").slice(0, 64),
     };
 
-    board.set(address, next);
-    await writeBoard(board);
+    if (supabase) {
+      await upsertSupabaseRow(supabase, next);
+    } else {
+      board.set(address, next);
+      await writeBoard(board);
+    }
+
+    const rows = supabase ? await getSupabaseRows(supabase) : rankedRows(board);
 
     return sendJson(response, 200, {
       ok: true,
       row: next,
-      rows: rankedRows(board),
+      rows,
       updatedAt: nowIso,
-      storage: kv ? "vercel-kv" : "memory",
+      storage: supabase ? "supabase" : "memory",
     });
->>>>>>> e80faac (Add real-claim leaderboard API with persistence fallback)
   } catch (error) {
     return sendJson(response, 400, { error: error.message || "Leaderboard update failed" });
   }
