@@ -507,6 +507,41 @@ function disconnectWallet() {
   setStatus("Wallet disconnected on this dApp. Clear connected sites in the extension to revoke permission.");
 }
 
+async function handleAccountsChanged(nextAccounts = []) {
+  const nextAccount = nextAccounts[0] || null;
+  account = nextAccount;
+  if (!account) {
+    chainId = null;
+    updateWalletStatus();
+    renderPortfolioStats();
+    setStatus("Wallet account disconnected.");
+    return;
+  }
+
+  localStorage.removeItem(DISCONNECT_KEY);
+  chainId = await window.ethereum?.request?.({ method: "eth_chainId" }).catch(() => chainId);
+  updateWalletStatus();
+  await refreshWalletProfile();
+  await refreshLeaderboard();
+  setStatus(`Active wallet switched to ${shortAddress(account)}.`);
+}
+
+async function handleChainChanged(nextChainId) {
+  chainId = nextChainId || chainId;
+  updateWalletStatus();
+  await refreshWalletProfile();
+}
+
+function setupWalletEventBridge() {
+  if (!window.ethereum?.on) return;
+  window.ethereum.on("accountsChanged", (nextAccounts) => {
+    handleAccountsChanged(nextAccounts).catch((error) => setStatus(error.message, true));
+  });
+  window.ethereum.on("chainChanged", (nextChainId) => {
+    handleChainChanged(nextChainId).catch((error) => setStatus(error.message, true));
+  });
+}
+
 function openAccountModal() {
   if (!account) return;
   $("accountModal").classList.remove("hidden");
@@ -648,5 +683,6 @@ renderHistory();
 refreshLeaderboard();
 applyTheme(localStorage.getItem(THEME_KEY) || "dark");
 updateWalletStatus();
+setupWalletEventBridge();
 setInterval(() => loadMarkets().catch((error) => setStatus(error.message, true)), 60000);
 setInterval(refreshLeaderboard, LEADERBOARD_REFRESH_MS);
