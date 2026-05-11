@@ -1041,6 +1041,46 @@ body.lightTheme .field select {
   margin: 12px 0 0;
 }
 
+.fieldError {
+  margin-top: -2px;
+  color: #ff9f9f;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.signResultText {
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(7, 16, 12, 0.65);
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.signResultText.pending {
+  border-color: rgba(255, 224, 140, 0.45);
+  color: #ffe28c;
+}
+
+.signResultText.success {
+  border-color: rgba(140, 227, 123, 0.5);
+  color: var(--green-strong);
+}
+
+.signResultText.error {
+  border-color: rgba(255, 159, 159, 0.5);
+  color: #ff9f9f;
+}
+
+.syncMeta {
+  margin: 4px 0 14px;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
 .historyPanel {
   margin-bottom: 20px;
 }

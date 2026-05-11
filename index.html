@@ -197,6 +197,7 @@
             <label class="field">
               Amount
               <input id="amountInput" type="number" min="0.01" step="0.01" value="1" />
+              <small id="amountErrorText" class="fieldError hidden">Enter at least 0.01 RITUAL.</small>
             </label>
 
             <label class="field">
@@ -211,6 +212,7 @@
 
             <button id="signButton" class="primaryButton" type="button">Sign Prediction</button>
             <p id="statusText" class="statusText" role="status"></p>
+            <p id="signResultText" class="signResultText hidden" role="status"></p>
           </aside>
         </section>
       </section>
@@ -326,6 +328,7 @@
             </div>
             <span id="leaderboardSeason" class="statusPill">Season 01</span>
           </div>
+          <p id="leaderboardSyncText" class="syncMeta">Sync pending.</p>
           <div class="leaderboardHero">
             <div>
               <span>Your rank</span>
@@ -354,6 +357,7 @@
             </div>
             <button id="profileRefreshButton" class="ghostButton" type="button">Refresh profile</button>
           </div>
+          <p id="profileSyncText" class="syncMeta">Sync pending.</p>
 
           <div class="profileHeroCard">
             <div class="profileAvatar" aria-hidden="true">

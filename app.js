@@ -25,6 +25,9 @@ let remoteLeaderboardRows = [];
 let profileRequestId = 0;
 let chartRequestId = 0;
 let lastActivityPersistedAt = 0;
+let leaderboardSyncedAt = null;
+let profileSyncedAt = null;
+let signingInProgress = false;
 
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, (char) => ({
@@ -43,6 +46,40 @@ function shortAddress(address) {
 function setStatus(message, isError = false) {
   $("statusText").textContent = message;
   $("statusText").classList.toggle("negative", isError);
+}
+
+function formatLastSyncText(timestamp) {
+  if (!timestamp) return "Sync pending.";
+  const deltaSeconds = Math.max(1, Math.round((Date.now() - timestamp) / 1000));
+  if (deltaSeconds < 60) return `Synced ${deltaSeconds}s ago.`;
+  const minutes = Math.round(deltaSeconds / 60);
+  if (minutes < 60) return `Synced ${minutes}m ago.`;
+  const hours = Math.round(minutes / 60);
+  return `Synced ${hours}h ago.`;
+}
+
+function renderSyncMeta() {
+  $("leaderboardSyncText").textContent = formatLastSyncText(leaderboardSyncedAt);
+  $("profileSyncText").textContent = formatLastSyncText(profileSyncedAt);
+}
+
+function setSignResult(message, tone = "pending") {
+  const target = $("signResultText");
+  if (!message) {
+    target.textContent = "";
+    target.className = "signResultText hidden";
+    return;
+  }
+  target.textContent = message;
+  target.className = `signResultText ${tone}`;
+}
+
+function validatePredictionForm() {
+  const amount = Number($("amountInput").value);
+  const valid = Number.isFinite(amount) && amount >= 0.01;
+  $("amountErrorText").classList.toggle("hidden", valid);
+  $("signButton").disabled = !valid || signingInProgress;
+  return valid;
 }
 
 function applyTheme(theme) {
@@ -320,11 +357,14 @@ async function refreshLeaderboard() {
     if (!response.ok) throw new Error("Leaderboard is not available yet.");
     const payload = await response.json();
     remoteLeaderboardRows = Array.isArray(payload.rows) ? payload.rows : [];
+    leaderboardSyncedAt = Date.now();
     $("leaderboardSeason").textContent = "Live season";
+    renderSyncMeta();
     renderLeaderboard();
   } catch (error) {
     remoteLeaderboardRows = [];
     $("leaderboardSeason").textContent = "Local preview";
+    renderSyncMeta();
     renderLeaderboard();
   }
 }
@@ -379,6 +419,8 @@ async function refreshWalletProfile() {
     $("profilePageScoreText").textContent = scoreText;
     $("profilePageSignedText").textContent = signedCount.toLocaleString();
     $("profilePageHint").textContent = hintText;
+    profileSyncedAt = Date.now();
+    renderSyncMeta();
   } catch (error) {
     if (requestId !== profileRequestId) return;
     $("profilePageBalanceText").textContent = "-";
@@ -386,6 +428,7 @@ async function refreshWalletProfile() {
     $("profilePageScoreText").textContent = "-";
     $("profilePageSignedText").textContent = getHistory().length.toString();
     $("profilePageHint").textContent = error.message || "Could not load Ritual RPC profile.";
+    renderSyncMeta();
   }
 }
 
@@ -659,9 +702,16 @@ function buildOrder() {
 }
 
 async function signPrediction() {
+  if (!validatePredictionForm()) {
+    setStatus("Amount must be at least 0.01 RITUAL.", true);
+    return;
+  }
+  signingInProgress = true;
+  $("signButton").disabled = true;
   try {
     if (!window.ethereum) throw new Error("Ritual wallet extension was not found.");
     if (!account) await connectWallet();
+    setSignResult("Waiting for wallet signature approval...", "pending");
     const order = buildOrder();
     const message = JSON.stringify(order, null, 2);
     const signature = await window.ethereum.request({
@@ -677,9 +727,15 @@ async function signPrediction() {
       signature,
       createdAt: order.createdAt,
     });
+    await refreshLeaderboard();
     setStatus("Prediction signed and saved locally.");
+    setSignResult("Order signed successfully. Local history and leaderboard are updating.", "success");
   } catch (error) {
     setStatus(error.message || "Failed to sign prediction.", true);
+    setSignResult(error.message || "Signature request failed.", "error");
+  } finally {
+    signingInProgress = false;
+    validatePredictionForm();
   }
 }
 
@@ -732,6 +788,7 @@ $("refreshButton").addEventListener("click", () => loadMarkets().catch((error) =
 $("searchInput").addEventListener("input", renderMarkets);
 $("coinSet").addEventListener("change", () => loadMarkets().catch((error) => setStatus(error.message, true)));
 $("signButton").addEventListener("click", signPrediction);
+$("amountInput").addEventListener("input", validatePredictionForm);
 $("clearHistoryButton").addEventListener("click", () => {
   localStorage.removeItem(HISTORY_KEY);
   renderHistory();
@@ -748,5 +805,7 @@ updateWalletStatus();
 setupWalletEventBridge();
 setupIdleDisconnect();
 restoreWalletSession();
+renderSyncMeta();
+validatePredictionForm();
 setInterval(() => loadMarkets().catch((error) => setStatus(error.message, true)), 60000);
 setInterval(refreshLeaderboard, LEADERBOARD_REFRESH_MS);
