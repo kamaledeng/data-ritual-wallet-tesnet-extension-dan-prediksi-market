@@ -8,9 +8,12 @@ const COIN_SETS = {
 
 const HISTORY_KEY = "ritual_prediction_history_v1";
 const DISCONNECT_KEY = "ritual_prediction_disconnected_v1";
+const SESSION_LAST_ACTIVE_KEY = "ritual_prediction_last_active_at_v1";
 const THEME_KEY = "ritual_prediction_theme_v1";
 const LEADERBOARD_ENDPOINT = "/api/ritual-leaderboard";
 const LEADERBOARD_REFRESH_MS = 5000;
+const IDLE_TIMEOUT_MS = 5 * 60 * 1000;
+const IDLE_CHECK_MS = 15000;
 const $ = (id) => document.getElementById(id);
 
 let account = null;
@@ -21,6 +24,7 @@ let selectedChoice = "YES";
 let remoteLeaderboardRows = [];
 let profileRequestId = 0;
 let chartRequestId = 0;
+let lastActivityPersistedAt = 0;
 
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, (char) => ({
@@ -494,17 +498,24 @@ async function connectWallet() {
   account = accounts[0] || null;
   chainId = await window.ethereum.request({ method: "eth_chainId" }).catch(() => null);
   localStorage.removeItem(DISCONNECT_KEY);
+  rememberSessionActivity(true);
   updateWalletStatus();
   await refreshWalletProfile();
+  await refreshLeaderboard();
   setStatus(account ? "Wallet connected." : "No account returned.", !account);
 }
 
-function disconnectWallet() {
+function disconnectWallet(reason = "manual") {
   account = null;
   chainId = null;
   localStorage.setItem(DISCONNECT_KEY, "1");
   updateWalletStatus();
-  setStatus("Wallet disconnected on this dApp. Clear connected sites in the extension to revoke permission.");
+  renderPortfolioStats();
+  setStatus(
+    reason === "idle"
+      ? "Wallet auto-disconnected after inactivity."
+      : "Wallet disconnected on this dApp. Clear connected sites in the extension to revoke permission.",
+  );
 }
 
 async function handleAccountsChanged(nextAccounts = []) {
@@ -519,6 +530,7 @@ async function handleAccountsChanged(nextAccounts = []) {
   }
 
   localStorage.removeItem(DISCONNECT_KEY);
+  rememberSessionActivity(true);
   chainId = await window.ethereum?.request?.({ method: "eth_chainId" }).catch(() => chainId);
   updateWalletStatus();
   await refreshWalletProfile();
@@ -540,6 +552,55 @@ function setupWalletEventBridge() {
   window.ethereum.on("chainChanged", (nextChainId) => {
     handleChainChanged(nextChainId).catch((error) => setStatus(error.message, true));
   });
+}
+
+function rememberSessionActivity(force = false) {
+  if (!account) return;
+  const now = Date.now();
+  if (!force && now - lastActivityPersistedAt < 5000) return;
+  lastActivityPersistedAt = now;
+  localStorage.setItem(SESSION_LAST_ACTIVE_KEY, String(now));
+}
+
+function hasSessionExpired() {
+  const stored = Number(localStorage.getItem(SESSION_LAST_ACTIVE_KEY) || "0");
+  if (!stored) return false;
+  return Date.now() - stored > IDLE_TIMEOUT_MS;
+}
+
+function setupIdleDisconnect() {
+  const activityEvents = ["pointerdown", "keydown", "scroll", "touchstart"];
+  for (const eventName of activityEvents) {
+    document.addEventListener(eventName, () => rememberSessionActivity(), { passive: true });
+  }
+  window.addEventListener("focus", () => rememberSessionActivity());
+  setInterval(() => {
+    if (!account) return;
+    if (hasSessionExpired()) disconnectWallet("idle");
+  }, IDLE_CHECK_MS);
+}
+
+async function restoreWalletSession() {
+  if (!window.ethereum?.request) return;
+  if (localStorage.getItem(DISCONNECT_KEY) === "1") return;
+  if (hasSessionExpired()) {
+    localStorage.setItem(DISCONNECT_KEY, "1");
+    setStatus("Previous wallet session expired due to inactivity.");
+    return;
+  }
+  try {
+    const accounts = await window.ethereum.request({ method: "eth_accounts" });
+    account = accounts[0] || null;
+    if (!account) return;
+    chainId = await window.ethereum.request({ method: "eth_chainId" }).catch(() => null);
+    rememberSessionActivity(true);
+    updateWalletStatus();
+    await refreshWalletProfile();
+    await refreshLeaderboard();
+    setStatus("Wallet session restored.");
+  } catch (error) {
+    setStatus(error.message || "Could not restore wallet session.", true);
+  }
 }
 
 function openAccountModal() {
@@ -675,6 +736,7 @@ $("clearHistoryButton").addEventListener("click", () => {
   localStorage.removeItem(HISTORY_KEY);
   renderHistory();
 });
+window.addEventListener("beforeunload", () => rememberSessionActivity(true));
 loadMarkets().catch((error) => {
   $("marketStatus").textContent = error.message;
   setStatus(error.message, true);
@@ -684,5 +746,7 @@ refreshLeaderboard();
 applyTheme(localStorage.getItem(THEME_KEY) || "dark");
 updateWalletStatus();
 setupWalletEventBridge();
+setupIdleDisconnect();
+restoreWalletSession();
 setInterval(() => loadMarkets().catch((error) => setStatus(error.message, true)), 60000);
 setInterval(refreshLeaderboard, LEADERBOARD_REFRESH_MS);
