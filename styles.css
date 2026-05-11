@@ -863,6 +863,133 @@ body.lightTheme .arenaTab {
   display: block;
 }
 
+.liveChartCard {
+  display: grid;
+  gap: 12px;
+  border: 1px solid rgba(140, 227, 123, 0.16);
+  border-radius: 8px;
+  padding: 14px;
+  background:
+    radial-gradient(circle at 88% 0%, rgba(255, 224, 138, 0.12), transparent 32%),
+    linear-gradient(145deg, rgba(140, 227, 123, 0.055), rgba(255, 255, 255, 0.02));
+}
+
+.liveChartHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.liveChartHeader strong {
+  display: block;
+  margin-top: 2px;
+}
+
+.liveChartHeader a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border: 1px solid rgba(255, 224, 138, 0.28);
+  border-radius: 999px;
+  padding: 0 10px;
+  color: var(--yellow);
+  background: rgba(255, 224, 138, 0.08);
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.chartCanvas {
+  display: grid;
+  place-items: center;
+  min-height: 170px;
+  overflow: hidden;
+  border: 1px solid rgba(140, 227, 123, 0.13);
+  border-radius: 8px;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    rgba(5, 15, 11, 0.78);
+  background-size: 100% 42px, 42px 100%, auto;
+}
+
+.marketChartSvg {
+  width: 100%;
+  max-width: 100%;
+  height: 170px;
+  color: var(--green-strong);
+}
+
+.marketChartSvg.negativeLine {
+  color: #ff6f91;
+}
+
+.chartGridLine {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.09);
+  stroke-width: 1;
+}
+
+.chartArea {
+  fill: url("#chartFill");
+}
+
+.chartLine {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 10px rgba(140, 227, 123, 0.28));
+}
+
+.chartDot {
+  fill: currentColor;
+  stroke: #07130e;
+  stroke-width: 3;
+}
+
+.chartStats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.chartStats article {
+  border: 1px solid rgba(140, 227, 123, 0.12);
+  border-radius: 8px;
+  padding: 9px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.chartStats span,
+.chartStats strong {
+  display: block;
+}
+
+.chartStats span {
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.chartStats strong {
+  margin-top: 4px;
+  overflow: hidden;
+  color: var(--text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chartStatus {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
 .choiceGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1331,6 +1458,88 @@ body.lightTheme .profileMetricCard {
   color: var(--muted);
   font-size: 0.78rem;
   overflow-wrap: anywhere;
+}
+
+.leaderboardPanel {
+  display: grid;
+  gap: 16px;
+}
+
+.leaderboardHero {
+  display: grid;
+  grid-template-columns: 1.4fr 0.8fr;
+  gap: 12px;
+}
+
+.leaderboardHero > div {
+  border: 1px solid rgba(140, 227, 123, 0.16);
+  border-radius: 8px;
+  padding: 16px;
+  background:
+    radial-gradient(circle at 92% 0%, rgba(255, 224, 138, 0.12), transparent 30%),
+    rgba(5, 15, 11, 0.72);
+}
+
+.leaderboardHero span,
+.leaderboardHero small {
+  display: block;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.leaderboardHero strong {
+  display: block;
+  margin: 6px 0;
+  color: var(--text);
+  font-size: clamp(1.8rem, 4vw, 3rem);
+}
+
+.leaderboardTable {
+  display: grid;
+  gap: 8px;
+}
+
+.leaderboardRow {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) 120px 90px 90px 90px;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(140, 227, 123, 0.12);
+  border-radius: 8px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.leaderboardRow.current {
+  border-color: rgba(255, 224, 138, 0.4);
+  background: rgba(255, 224, 138, 0.06);
+}
+
+.leaderboardRow > strong,
+.leaderboardRow em {
+  color: var(--yellow);
+  font-style: normal;
+  font-weight: 900;
+}
+
+.leaderboardRow b,
+.leaderboardRow small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.leaderboardRow small {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.leaderboardNote {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 800;
 }
 
 @media (max-width: 960px) {

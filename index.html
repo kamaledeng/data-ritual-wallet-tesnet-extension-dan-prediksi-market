@@ -161,6 +161,34 @@
               <span id="selectedMarketMeta" class="muted">No market selected</span>
             </div>
 
+            <section class="liveChartCard" aria-label="Selected market live chart">
+              <div class="liveChartHeader">
+                <div>
+                  <p class="label">Live chart</p>
+                  <strong id="chartTitle">Select a coin</strong>
+                </div>
+                <a id="chartSourceLink" href="https://www.coingecko.com" target="_blank" rel="noreferrer">CoinGecko</a>
+              </div>
+              <div id="chartCanvas" class="chartCanvas" aria-live="polite">
+                <span class="muted">Click BTC, ETH, or any market to load the 24h chart.</span>
+              </div>
+              <div class="chartStats">
+                <article>
+                  <span>High 24h</span>
+                  <strong id="chartHighText">-</strong>
+                </article>
+                <article>
+                  <span>Low 24h</span>
+                  <strong id="chartLowText">-</strong>
+                </article>
+                <article>
+                  <span>Volume</span>
+                  <strong id="chartVolumeText">-</strong>
+                </article>
+              </div>
+              <p id="chartStatus" class="chartStatus">Waiting for market selection.</p>
+            </section>
+
             <div class="choiceGrid" role="group" aria-label="Prediction choice">
               <button class="choiceButton selected" type="button" data-choice="YES">YES</button>
               <button class="choiceButton" type="button" data-choice="NO">NO</button>
@@ -290,21 +318,30 @@
       </section>
 
       <section id="leaderboardView" class="arenaView hidden">
-        <section class="panel comingSoonPanel">
-          <div class="comingSoonOrb">
-            <img src="assets/ritual-logo-green.png" alt="" />
+        <section class="panel leaderboardPanel">
+          <div class="sectionHeader">
+            <div>
+              <p class="eyebrow">Leaderboard</p>
+              <h2>Ritual arena rank</h2>
+            </div>
+            <span id="leaderboardSeason" class="statusPill">Season 01</span>
           </div>
-          <p class="eyebrow">Leaderboard</p>
-          <h2>Coming soon</h2>
-          <p>
-            Trader rankings, prediction points, win streaks, and Ritual arena badges
-            will appear here after the scoring system is ready.
+          <div class="leaderboardHero">
+            <div>
+              <span>Your rank</span>
+              <strong id="leaderboardMyRank">Connect wallet</strong>
+              <small id="leaderboardMyMeta">Daily rituals and signed predictions will shape this score.</small>
+            </div>
+            <div>
+              <span>Your XP</span>
+              <strong id="leaderboardMyXp">0</strong>
+              <small>gRitual XP</small>
+            </div>
+          </div>
+          <div class="leaderboardTable" id="leaderboardTable"></div>
+          <p class="leaderboardNote">
+            Live board reads ritual claim and check-in events submitted by the Ritual wallet extension.
           </p>
-          <div class="comingSoonGrid">
-            <span>Points engine</span>
-            <span>Win-rate tracking</span>
-            <span>Season rewards</span>
-          </div>
         </section>
       </section>
 

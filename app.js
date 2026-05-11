@@ -9,6 +9,7 @@ const COIN_SETS = {
 const HISTORY_KEY = "ritual_prediction_history_v1";
 const DISCONNECT_KEY = "ritual_prediction_disconnected_v1";
 const THEME_KEY = "ritual_prediction_theme_v1";
+const LEADERBOARD_ENDPOINT = "/api/ritual-leaderboard";
 const $ = (id) => document.getElementById(id);
 
 let account = null;
@@ -16,7 +17,9 @@ let chainId = null;
 let markets = [];
 let selectedMarket = null;
 let selectedChoice = "YES";
+let remoteLeaderboardRows = [];
 let profileRequestId = 0;
+let chartRequestId = 0;
 
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, (char) => ({
@@ -96,6 +99,80 @@ function syntheticYes(change) {
   return Math.max(5, Math.min(95, value));
 }
 
+function sparklinePath(prices, width = 360, height = 150, padding = 12) {
+  if (!prices.length) return { line: "", area: "", min: 0, max: 0, last: 0 };
+  const values = prices.map((item) => Number(item[1])).filter(Number.isFinite);
+  if (!values.length) return { line: "", area: "", min: 0, max: 0, last: 0 };
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max - min || 1;
+  const points = values.map((value, index) => {
+    const x = padding + (index / Math.max(1, values.length - 1)) * (width - padding * 2);
+    const y = height - padding - ((value - min) / range) * (height - padding * 2);
+    return [x, y];
+  });
+  const line = points.map(([x, y], index) => `${index ? "L" : "M"} ${x.toFixed(2)} ${y.toFixed(2)}`).join(" ");
+  const area = `${line} L ${width - padding} ${height - padding} L ${padding} ${height - padding} Z`;
+  return { line, area, min, max, last: values.at(-1) ?? 0 };
+}
+
+function renderChartShell(message = "Loading live chart...") {
+  $("chartCanvas").innerHTML = `<span class="muted">${escapeHtml(message)}</span>`;
+}
+
+function renderMarketChart(market, prices) {
+  const width = 360;
+  const height = 150;
+  const chart = sparklinePath(prices, width, height);
+  const positive = (market.price_change_percentage_24h || 0) >= 0;
+  const tone = positive ? "positiveLine" : "negativeLine";
+  $("chartCanvas").innerHTML = `
+    <svg class="marketChartSvg ${tone}" viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(market.symbol.toUpperCase())} 24 hour price chart">
+      <defs>
+        <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="currentColor" stop-opacity="0.28" />
+          <stop offset="100%" stop-color="currentColor" stop-opacity="0" />
+        </linearGradient>
+      </defs>
+      <path class="chartGridLine" d="M 12 38 H 348 M 12 75 H 348 M 12 112 H 348" />
+      <path class="chartArea" d="${chart.area}" />
+      <path class="chartLine" d="${chart.line}" />
+      <circle class="chartDot" cx="348" cy="${(height - 12 - ((chart.last - chart.min) / ((chart.max - chart.min) || 1)) * (height - 24)).toFixed(2)}" r="4" />
+    </svg>
+  `;
+  $("chartTitle").textContent = `${market.symbol.toUpperCase()} 24h market`;
+  $("chartHighText").textContent = formatUsd(Math.max(chart.max, market.high_24h || 0));
+  $("chartLowText").textContent = formatUsd(Math.min(chart.min, market.low_24h || chart.min));
+  $("chartVolumeText").textContent = formatCompact(market.total_volume);
+  $("chartSourceLink").href = `https://www.coingecko.com/en/coins/${encodeURIComponent(market.id)}`;
+  $("chartStatus").textContent = `Live source: CoinGecko | Updated ${new Date().toLocaleTimeString()}`;
+}
+
+async function loadMarketChart(market) {
+  const requestId = ++chartRequestId;
+  $("chartTitle").textContent = `${market.symbol.toUpperCase()} live market`;
+  $("chartStatus").textContent = "Loading CoinGecko 24h chart...";
+  renderChartShell("Syncing 24h price action...");
+
+  try {
+    const url = new URL(`https://api.coingecko.com/api/v3/coins/${encodeURIComponent(market.id)}/market_chart`);
+    url.searchParams.set("vs_currency", "usd");
+    url.searchParams.set("days", "1");
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`CoinGecko chart error ${response.status}`);
+    const payload = await response.json();
+    if (requestId !== chartRequestId || selectedMarket?.id !== market.id) return;
+    renderMarketChart(market, payload.prices || []);
+  } catch (error) {
+    if (requestId !== chartRequestId) return;
+    renderChartShell("Chart temporarily unavailable. Try Refresh.");
+    $("chartStatus").textContent = error.message || "Could not load chart.";
+    $("chartHighText").textContent = formatUsd(market.high_24h);
+    $("chartLowText").textContent = formatUsd(market.low_24h);
+    $("chartVolumeText").textContent = formatCompact(market.total_volume);
+  }
+}
+
 function getHistory() {
   try {
     return JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
@@ -139,6 +216,101 @@ function renderPortfolioStats(history = getHistory()) {
   $("statSignedVolume").textContent = totalAmount ? `${totalAmount.toFixed(2)} RITUAL` : "0";
   $("statFavoriteSide").textContent = yesCount || noCount ? (yesCount >= noCount ? "YES" : "NO") : "-";
   $("profilePageSignedText").textContent = history.length.toString();
+  renderLeaderboard(history);
+}
+
+function timeAgo(value) {
+  const timestamp = new Date(value).getTime();
+  if (!Number.isFinite(timestamp)) return "-";
+  const seconds = Math.max(1, Math.round((Date.now() - timestamp) / 1000));
+  if (seconds < 60) return `${seconds}s ago`;
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.round(hours / 24)}d ago`;
+}
+
+function normalizeLeaderboardRows(rows = []) {
+  return rows.map((row) => ({
+    name: row.name || shortAddress(row.address || "0x0000000000000000000000000000000000000000"),
+    address: row.address || "0x0000000000000000000000000000000000000000",
+    xp: Number(row.xp || 0),
+    streak: Number(row.streak || 0),
+    claims: Number(row.actions || row.claims || 0),
+    active: timeAgo(row.updatedAt),
+    lastTask: row.lastTask || "Ritual task",
+  })).sort((a, b) => b.xp - a.xp);
+}
+
+function localLeaderboardRow(history = getHistory()) {
+  const localVolume = history.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  const localXp = history.length * 35 + Math.round(localVolume * 8);
+  return {
+    address: account || "Connect wallet",
+    name: account ? "You" : "Your wallet",
+    xp: localXp,
+    streak: Math.min(7, Math.max(0, history.length)),
+    claims: history.length,
+    active: history[0]?.createdAt ? new Date(history[0].createdAt).toLocaleTimeString() : "-",
+    lastTask: "Signed prediction",
+  };
+}
+
+function leaderboardRows(history = getHistory()) {
+  const localRow = localLeaderboardRow(history);
+  const remoteRows = normalizeLeaderboardRows(remoteLeaderboardRows);
+  if (remoteRows.length) {
+    const rows = account
+      ? remoteRows.filter((row) => row.address.toLowerCase() !== account.toLowerCase())
+      : remoteRows;
+    return (account ? [...rows, localRow] : rows).sort((a, b) => b.xp - a.xp);
+  }
+  return [
+    { name: "0x8a9...7c1", address: "0x8a9...7c1", xp: 940, streak: 18, claims: 34, active: "2m ago" },
+    { name: "0x4e2...91b", address: "0x4e2...91b", xp: 710, streak: 12, claims: 22, active: "1h ago" },
+    localRow,
+    { name: "0x71d...3af", address: "0x71d...3af", xp: 260, streak: 5, claims: 8, active: "4h ago" },
+  ].sort((a, b) => b.xp - a.xp);
+}
+
+function renderLeaderboard(history = getHistory()) {
+  const rows = leaderboardRows(history);
+  const myIndex = rows.findIndex((row) => row.name === "You" || row.name === "Your wallet");
+  const myRow = rows[myIndex] || rows[0];
+  $("leaderboardMyRank").textContent = account ? `#${myIndex + 1}` : "Connect wallet";
+  $("leaderboardMyXp").textContent = (account ? myRow.xp : 0).toLocaleString();
+  $("leaderboardMyMeta").textContent = account
+    ? `${shortAddress(account)} | ${myRow.streak} day streak | ${myRow.claims} actions`
+    : "Connect wallet to preview your arena rank.";
+  $("leaderboardTable").innerHTML = rows.map((row, index) => `
+    <article class="leaderboardRow ${row === myRow && account ? "current" : ""}">
+      <strong>#${index + 1}</strong>
+      <span>
+        <b>${escapeHtml(row.name)}</b>
+        <small>${escapeHtml(row.address)}</small>
+      </span>
+      <em>${row.xp.toLocaleString()} XP</em>
+      <small>${row.streak}d streak</small>
+      <small>${row.claims} claims</small>
+      <small>${escapeHtml(row.active)}</small>
+    </article>
+  `).join("");
+}
+
+async function refreshLeaderboard() {
+  try {
+    const response = await fetch(LEADERBOARD_ENDPOINT, { cache: "no-store" });
+    if (!response.ok) throw new Error("Leaderboard is not available yet.");
+    const payload = await response.json();
+    remoteLeaderboardRows = Array.isArray(payload.rows) ? payload.rows : [];
+    $("leaderboardSeason").textContent = "Live season";
+    renderLeaderboard();
+  } catch (error) {
+    remoteLeaderboardRows = [];
+    $("leaderboardSeason").textContent = "Local preview";
+    renderLeaderboard();
+  }
 }
 
 function updateWalletStatus() {
@@ -161,6 +333,7 @@ function updateWalletStatus() {
     $("profilePageSignedText").textContent = getHistory().length.toString();
     $("profilePageHint").textContent = "Connect wallet to load profile stats from Ritual RPC.";
   }
+  renderLeaderboard();
 }
 
 async function refreshWalletProfile() {
@@ -225,6 +398,7 @@ function chooseMarket(market) {
   $("selectedMarketText").textContent = `${market.symbol.toUpperCase()}: ${formatUsd(market.current_price)}`;
   $("selectedMarketMeta").textContent = `${formatChange(market.price_change_percentage_24h)} 24h | YES ${yes} / NO ${100 - yes} | Vol ${formatCompact(market.total_volume)}`;
   updateTicker(market);
+  loadMarketChart(market);
   renderMarkets();
 }
 
@@ -459,6 +633,8 @@ loadMarkets().catch((error) => {
   setStatus(error.message, true);
 });
 renderHistory();
+refreshLeaderboard();
 applyTheme(localStorage.getItem(THEME_KEY) || "dark");
 updateWalletStatus();
 setInterval(() => loadMarkets().catch((error) => setStatus(error.message, true)), 60000);
+setInterval(refreshLeaderboard, 30000);
