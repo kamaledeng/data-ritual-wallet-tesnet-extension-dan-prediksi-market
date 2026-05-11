@@ -10,6 +10,7 @@ const HISTORY_KEY = "ritual_prediction_history_v1";
 const DISCONNECT_KEY = "ritual_prediction_disconnected_v1";
 const THEME_KEY = "ritual_prediction_theme_v1";
 const LEADERBOARD_ENDPOINT = "/api/ritual-leaderboard";
+const LEADERBOARD_REFRESH_MS = 5000;
 const $ = (id) => document.getElementById(id);
 
 let account = null;
@@ -237,7 +238,7 @@ function normalizeLeaderboardRows(rows = []) {
     address: row.address || "0x0000000000000000000000000000000000000000",
     xp: Number(row.xp || 0),
     streak: Number(row.streak || 0),
-    claims: Number(row.actions || row.claims || 0),
+    claims: Number(row.dailyClaims || row.actions || row.claims || 0),
     active: timeAgo(row.updatedAt),
     lastTask: row.lastTask || "Ritual task",
   })).sort((a, b) => b.xp - a.xp);
@@ -261,10 +262,19 @@ function leaderboardRows(history = getHistory()) {
   const localRow = localLeaderboardRow(history);
   const remoteRows = normalizeLeaderboardRows(remoteLeaderboardRows);
   if (remoteRows.length) {
-    const rows = account
-      ? remoteRows.filter((row) => row.address.toLowerCase() !== account.toLowerCase())
-      : remoteRows;
-    return (account ? [...rows, localRow] : rows).sort((a, b) => b.xp - a.xp);
+    if (!account) return remoteRows;
+    const hasCurrentWallet = remoteRows.some((row) => row.address.toLowerCase() === account.toLowerCase());
+    return hasCurrentWallet
+      ? remoteRows
+      : [...remoteRows, {
+        ...localRow,
+        name: "You (pending sync)",
+        address: account,
+        xp: 0,
+        streak: 0,
+        claims: 0,
+        active: "pending",
+      }];
   }
   return [
     { name: "0x8a9...7c1", address: "0x8a9...7c1", xp: 940, streak: 18, claims: 34, active: "2m ago" },
@@ -276,15 +286,17 @@ function leaderboardRows(history = getHistory()) {
 
 function renderLeaderboard(history = getHistory()) {
   const rows = leaderboardRows(history);
-  const myIndex = rows.findIndex((row) => row.name === "You" || row.name === "Your wallet");
-  const myRow = rows[myIndex] || rows[0];
-  $("leaderboardMyRank").textContent = account ? `#${myIndex + 1}` : "Connect wallet";
-  $("leaderboardMyXp").textContent = (account ? myRow.xp : 0).toLocaleString();
+  const myIndex = account ? rows.findIndex((row) => row.address.toLowerCase() === account.toLowerCase()) : -1;
+  const myRow = myIndex >= 0 ? rows[myIndex] : null;
+  $("leaderboardMyRank").textContent = account ? (myRow ? `#${myIndex + 1}` : "Not ranked yet") : "Connect wallet";
+  $("leaderboardMyXp").textContent = (account ? (myRow?.xp || 0) : 0).toLocaleString();
   $("leaderboardMyMeta").textContent = account
-    ? `${shortAddress(account)} | ${myRow.streak} day streak | ${myRow.claims} actions`
+    ? (myRow
+      ? `${shortAddress(account)} | ${myRow.streak} day streak | ${myRow.claims} claims`
+      : `${shortAddress(account)} | waiting for wallet sync...`)
     : "Connect wallet to preview your arena rank.";
   $("leaderboardTable").innerHTML = rows.map((row, index) => `
-    <article class="leaderboardRow ${row === myRow && account ? "current" : ""}">
+    <article class="leaderboardRow ${account && row.address.toLowerCase() === account.toLowerCase() ? "current" : ""}">
       <strong>#${index + 1}</strong>
       <span>
         <b>${escapeHtml(row.name)}</b>
@@ -637,4 +649,4 @@ refreshLeaderboard();
 applyTheme(localStorage.getItem(THEME_KEY) || "dark");
 updateWalletStatus();
 setInterval(() => loadMarkets().catch((error) => setStatus(error.message, true)), 60000);
-setInterval(refreshLeaderboard, 30000);
+setInterval(refreshLeaderboard, LEADERBOARD_REFRESH_MS);
