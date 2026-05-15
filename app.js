@@ -10,8 +10,6 @@ const HISTORY_KEY = "ritual_prediction_history_v1";
 const DISCONNECT_KEY = "ritual_prediction_disconnected_v1";
 const SESSION_LAST_ACTIVE_KEY = "ritual_prediction_last_active_at_v1";
 const THEME_KEY = "ritual_prediction_theme_v1";
-const LEADERBOARD_ENDPOINT = "/api/ritual-leaderboard";
-const LEADERBOARD_REFRESH_MS = 5000;
 const IDLE_TIMEOUT_MS = 5 * 60 * 1000;
 const IDLE_CHECK_MS = 15000;
 const $ = (id) => document.getElementById(id);
@@ -21,11 +19,9 @@ let chainId = null;
 let markets = [];
 let selectedMarket = null;
 let selectedChoice = "YES";
-let remoteLeaderboardRows = [];
 let profileRequestId = 0;
 let chartRequestId = 0;
 let lastActivityPersistedAt = 0;
-let leaderboardSyncedAt = null;
 let profileSyncedAt = null;
 let signingInProgress = false;
 
@@ -59,7 +55,6 @@ function formatLastSyncText(timestamp) {
 }
 
 function renderSyncMeta() {
-  $("leaderboardSyncText").textContent = formatLastSyncText(leaderboardSyncedAt);
   $("profileSyncText").textContent = formatLastSyncText(profileSyncedAt);
 }
 
@@ -258,7 +253,6 @@ function renderPortfolioStats(history = getHistory()) {
   $("statSignedVolume").textContent = totalAmount ? `${totalAmount.toFixed(2)} RITUAL` : "0";
   $("statFavoriteSide").textContent = yesCount || noCount ? (yesCount >= noCount ? "YES" : "NO") : "-";
   $("profilePageSignedText").textContent = history.length.toString();
-  renderLeaderboard(history);
 }
 
 function timeAgo(value) {
@@ -271,102 +265,6 @@ function timeAgo(value) {
   const hours = Math.round(minutes / 60);
   if (hours < 24) return `${hours}h ago`;
   return `${Math.round(hours / 24)}d ago`;
-}
-
-function normalizeLeaderboardRows(rows = []) {
-  return rows.map((row) => ({
-    name: row.name || shortAddress(row.address || "0x0000000000000000000000000000000000000000"),
-    address: row.address || "0x0000000000000000000000000000000000000000",
-    xp: Number(row.xp || 0),
-    streak: Number(row.streak || 0),
-    claims: Number(row.dailyClaims || row.actions || row.claims || 0),
-    active: timeAgo(row.updatedAt),
-    lastTask: row.lastTask || "Ritual task",
-  })).sort((a, b) => b.xp - a.xp);
-}
-
-function localLeaderboardRow(history = getHistory()) {
-  const localVolume = history.reduce((sum, item) => sum + Number(item.amount || 0), 0);
-  const localXp = history.length * 35 + Math.round(localVolume * 8);
-  return {
-    address: account || "Connect wallet",
-    name: account ? "You" : "Your wallet",
-    xp: localXp,
-    streak: Math.min(7, Math.max(0, history.length)),
-    claims: history.length,
-    active: history[0]?.createdAt ? new Date(history[0].createdAt).toLocaleTimeString() : "-",
-    lastTask: "Signed prediction",
-  };
-}
-
-function leaderboardRows(history = getHistory()) {
-  const localRow = localLeaderboardRow(history);
-  const remoteRows = normalizeLeaderboardRows(remoteLeaderboardRows);
-  if (remoteRows.length) {
-    if (!account) return remoteRows;
-    const hasCurrentWallet = remoteRows.some((row) => row.address.toLowerCase() === account.toLowerCase());
-    return hasCurrentWallet
-      ? remoteRows
-      : [...remoteRows, {
-        ...localRow,
-        name: "You (pending sync)",
-        address: account,
-        xp: 0,
-        streak: 0,
-        claims: 0,
-        active: "pending",
-      }];
-  }
-  return [
-    { name: "0x8a9...7c1", address: "0x8a9...7c1", xp: 940, streak: 18, claims: 34, active: "2m ago" },
-    { name: "0x4e2...91b", address: "0x4e2...91b", xp: 710, streak: 12, claims: 22, active: "1h ago" },
-    localRow,
-    { name: "0x71d...3af", address: "0x71d...3af", xp: 260, streak: 5, claims: 8, active: "4h ago" },
-  ].sort((a, b) => b.xp - a.xp);
-}
-
-function renderLeaderboard(history = getHistory()) {
-  const rows = leaderboardRows(history);
-  const myIndex = account ? rows.findIndex((row) => row.address.toLowerCase() === account.toLowerCase()) : -1;
-  const myRow = myIndex >= 0 ? rows[myIndex] : null;
-  $("leaderboardMyRank").textContent = account ? (myRow ? `#${myIndex + 1}` : "Not ranked yet") : "Connect wallet";
-  $("leaderboardMyXp").textContent = (account ? (myRow?.xp || 0) : 0).toLocaleString();
-  $("leaderboardMyMeta").textContent = account
-    ? (myRow
-      ? `${shortAddress(account)} | ${myRow.streak} day streak | ${myRow.claims} claims`
-      : `${shortAddress(account)} | waiting for wallet sync...`)
-    : "Connect wallet to preview your arena rank.";
-  $("leaderboardTable").innerHTML = rows.map((row, index) => `
-    <article class="leaderboardRow ${account && row.address.toLowerCase() === account.toLowerCase() ? "current" : ""}">
-      <strong>#${index + 1}</strong>
-      <span>
-        <b>${escapeHtml(row.name)}</b>
-        <small>${escapeHtml(row.address)}</small>
-      </span>
-      <em>${row.xp.toLocaleString()} XP</em>
-      <small>${row.streak}d streak</small>
-      <small>${row.claims} claims</small>
-      <small>${escapeHtml(row.active)}</small>
-    </article>
-  `).join("");
-}
-
-async function refreshLeaderboard() {
-  try {
-    const response = await fetch(LEADERBOARD_ENDPOINT, { cache: "no-store" });
-    if (!response.ok) throw new Error("Leaderboard is not available yet.");
-    const payload = await response.json();
-    remoteLeaderboardRows = Array.isArray(payload.rows) ? payload.rows : [];
-    leaderboardSyncedAt = Date.now();
-    $("leaderboardSeason").textContent = "Live season";
-    renderSyncMeta();
-    renderLeaderboard();
-  } catch (error) {
-    remoteLeaderboardRows = [];
-    $("leaderboardSeason").textContent = "Local preview";
-    renderSyncMeta();
-    renderLeaderboard();
-  }
 }
 
 function updateWalletStatus() {
@@ -389,7 +287,6 @@ function updateWalletStatus() {
     $("profilePageSignedText").textContent = getHistory().length.toString();
     $("profilePageHint").textContent = "Connect wallet to load profile stats from Ritual RPC.";
   }
-  renderLeaderboard();
 }
 
 async function refreshWalletProfile() {
@@ -544,7 +441,6 @@ async function connectWallet() {
   rememberSessionActivity(true);
   updateWalletStatus();
   await refreshWalletProfile();
-  await refreshLeaderboard();
   setStatus(account ? "Wallet connected." : "No account returned.", !account);
 }
 
@@ -577,7 +473,6 @@ async function handleAccountsChanged(nextAccounts = []) {
   chainId = await window.ethereum?.request?.({ method: "eth_chainId" }).catch(() => chainId);
   updateWalletStatus();
   await refreshWalletProfile();
-  await refreshLeaderboard();
   setStatus(`Active wallet switched to ${shortAddress(account)}.`);
 }
 
@@ -639,7 +534,6 @@ async function restoreWalletSession() {
     rememberSessionActivity(true);
     updateWalletStatus();
     await refreshWalletProfile();
-    await refreshLeaderboard();
     setStatus("Wallet session restored.");
   } catch (error) {
     setStatus(error.message || "Could not restore wallet session.", true);
@@ -727,9 +621,8 @@ async function signPrediction() {
       signature,
       createdAt: order.createdAt,
     });
-    await refreshLeaderboard();
     setStatus("Prediction signed and saved locally.");
-    setSignResult("Order signed successfully. Local history and leaderboard are updating.", "success");
+    setSignResult("Order signed successfully. Local history has been updated.", "success");
   } catch (error) {
     setStatus(error.message || "Failed to sign prediction.", true);
     setSignResult(error.message || "Signature request failed.", "error");
@@ -799,7 +692,6 @@ loadMarkets().catch((error) => {
   setStatus(error.message, true);
 });
 renderHistory();
-refreshLeaderboard();
 applyTheme(localStorage.getItem(THEME_KEY) || "dark");
 updateWalletStatus();
 setupWalletEventBridge();
@@ -808,4 +700,3 @@ restoreWalletSession();
 renderSyncMeta();
 validatePredictionForm();
 setInterval(() => loadMarkets().catch((error) => setStatus(error.message, true)), 60000);
-setInterval(refreshLeaderboard, LEADERBOARD_REFRESH_MS);
